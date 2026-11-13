@@ -2,7 +2,7 @@
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Trần Thị Hạ Anh | 2A202603887 | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí kiểm định chất lượng |
+| Trần Thị Hà Anh | 2A202603887 | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí kiểm định chất lượng |
 | Trần Gia Bảo | 2A202603914 | §4, §5, §7: ma trận mức tự chủ, xây dựng prototype tương tác, chuẩn bị demo |
 
 ---
@@ -145,11 +145,11 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
   - Nếu **Luôn cần duyệt (Always Approve)**: Ở ca K1 (người bán đã chủ động nhắn nhận gửi nhầm áo), người mua phải chờ nhân viên trực duyệt thủ công 24h một cách vô lý, triệt tiêu hoàn toàn lợi thế tự động hóa của AI.
   - Nếu **Cấm hoàn toàn (Ban)**: AI trở thành chatbot tra cứu thụ động, không giải quyết được khâu nào trong quy trình khiếu nại, quay về menu tĩnh cũ.
 - **Quan điểm ban đầu của hai thành viên:**
-  - *Hạ Anh (A):* Đề xuất mức **Cần người duyệt**. Lập luận: Xuất phát từ góc độ pháp lý và bảo vệ đối tác người bán; hoàn tiền là giao dịch tài chính một chiều khó đảo ngược, nếu thả cho AI tự làm thì nguy cơ bùng nổ khiếu nại trục lợi từ khách hàng.
+  - *Hà Anh (A):* Đề xuất mức **Cần người duyệt**. Lập luận: Xuất phát từ góc độ pháp lý và bảo vệ đối tác người bán; hoàn tiền là giao dịch tài chính một chiều khó đảo ngược, nếu thả cho AI tự làm thì nguy cơ bùng nổ khiếu nại trục lợi từ khách hàng.
   - *Bảo (B):* Đề xuất mức **Tự làm (Auto)**. Lập luận: Xuất phát từ góc độ trải nghiệm người mua (UX) và tối ưu tỷ lệ chuyển đổi; nếu ca nào cũng đợi người duyệt thì SLA xử lý kéo dài gây ức chế ("cứ bảo đợi nhân viên thì dùng AI làm gì").
 - **Nhóm chốt giải pháp kiến trúc dung hòa:** **Tách đôi tool `soan_hoan_tien` thành 2 giai đoạn độc lập:**
   1. `soan_de_xuat_hoan_tien`: **Tự làm** — AI tự động tổng hợp hồ sơ, so sánh snapshot, trích xuất dữ liệu mâu thuẫn để tạo sẵn phiếu đề xuất kèm chứng cứ (chưa phát sinh giao dịch tiền).
-  2. `thuc_hien_hoan_tien`: **Cần người duyệt** — Nhân viên sàn thẩm định và bấm duyệt. Đồng thời đề xuất thêm **Làn duyệt nhanh (Fast-track 1-click)** *(đề xuất thiết kế, chưa dựng trong prototype)*: nếu người bán đã xác nhận lỗi gửi nhầm trên kênh người bán, nhân viên chỉ cần 1 cú click duyệt mà không cần thẩm định lại từ đầu. Giải pháp này vừa chặn đứng rủi ro K4/K6 (thỏa mãn yêu cầu an toàn của Hạ Anh), vừa rút ngắn tối đa thời gian chờ đợi cho K1 (thỏa mãn yêu cầu trải nghiệm của Bảo).
+  2. `thuc_hien_hoan_tien`: **Cần người duyệt** — Nhân viên sàn thẩm định và bấm duyệt. Đồng thời đề xuất thêm **Làn duyệt nhanh (Fast-track 1-click)** *(đề xuất thiết kế, chưa dựng trong prototype)*: nếu người bán đã xác nhận lỗi gửi nhầm trên kênh người bán, nhân viên chỉ cần 1 cú click duyệt mà không cần thẩm định lại từ đầu. Giải pháp này vừa chặn đứng rủi ro K4/K6 (thỏa mãn yêu cầu an toàn của Hà Anh), vừa rút ngắn tối đa thời gian chờ đợi cho K1 (thỏa mãn yêu cầu trải nghiệm của Bảo).
 
 ### Thử mức đã đặt
 | Kịch bản | Cái sai có bị chặn? | Còn làm khi lẽ ra phải hỏi? | Người dùng bình thường chờ vô ích? |
@@ -236,7 +236,7 @@ Bảng kết quả chấm thử nghiệm trên 2 kịch bản thực tế:
   - *Ca 3: Hai bên cung cấp chứng cứ mâu thuẫn đối đầu nhau* → Kích hoạt `chuyen_truong_nhom`, trích dẫn bằng chứng của cả hai phía lên màn hình nhân viên, AI không tự phán quyết thắng-thua.
   - *Ca 4: Đơn hàng đã nhận quá 7 ngày mới khiếu nại* → AI trích dẫn chính sách 7 ngày của bài thi; từ chối cam kết kết quả; hướng dẫn liên hệ nhân viên CSKH để xem xét ngoại lệ.
 - **Phân công nhiệm vụ khi Demo:** 
-  - **Hạ Anh thuyết trình:** Trình bày bối cảnh lát cắt (§1), phân tích các kịch bản rủi ro (§2) và cơ chế phản hồi khi AI sai (§3).
+  - **Hà Anh thuyết trình:** Trình bày bối cảnh lát cắt (§1), phân tích các kịch bản rủi ro (§2) và cơ chế phản hồi khi AI sai (§3).
   - **Bảo thao tác & biện luận:** Trực tiếp thao tác trên prototype [prototype/index.html](prototype/index.html), trình bày ma trận mức tự chủ (§4). 
   - **Chuẩn bị trả lời 2 câu hỏi sát hạch của TA:**
     1. *"Chỗ nào trên giao diện là nguyên tắc HAX G__?"* → Bảo trỏ trực tiếp vào 9 điểm neo chú thích ① đến ⑨ trên màn hình.
