@@ -181,7 +181,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
   | ① Người mua báo vấn đề | Người mua → AI phân loại | Gửi tin | — |
   | ② Bằng chứng | Người mua (AI chỉ *xin*, tool `yeu_cau_bang_chung` = tự làm) | Có ảnh | Bấm “Gửi yêu cầu trả hàng/hoàn tiền” khi chưa có ảnh → cảnh báo đỏ, không gửi |
   | ③ Người bán phản hồi (48 giờ) | Người bán | Phản hồi, *hoặc* xác nhận lỗi, *hoặc* hết hạn 48 giờ | — (chỉ áp dụng khi người bán đã được báo) |
-  | ④ Nhân viên quyết | Nhân viên (không phải AI) | Đủ ② **và** ③ | Nút “Duyệt hoàn tiền” và “Không duyệt” cùng mờ, kèm danh sách ✓/✗ còn thiếu gì |
+  | ④ Nhân viên quyết | Nhân viên (không phải AI). Hồ sơ **tự lên nhân viên** ngay khi ③ xong, không cần người mua bấm gì; người mua có thể bấm “Gặp nhân viên” để lên sớm hơn | Đủ ② **và** ③ | Nút “Duyệt hoàn tiền” và “Không duyệt” cùng mờ, kèm danh sách ✓/✗ còn thiếu gì |
 
   Tại bước ④ nhân viên có ba lựa chọn:
   - **Duyệt hoàn tiền** → hộp xác nhận tóm tắt hai bên → tiền về người mua, hồ sơ đóng.
@@ -193,6 +193,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
   Các nhánh đặc biệt:
   - **Làn duyệt nhanh (K1):** người bán bấm “Xác nhận gửi nhầm” → chỉ còn nút “Duyệt nhanh hoàn tiền”, không có “Không duyệt” vì người bán đã nhận lỗi. Vẫn là nhân viên bấm.
   - **Hoàn tác:** chuyển nhân viên do AI tự làm thì hoàn tác được, *cho tới khi* người mua gửi yêu cầu chính thức hoặc nhân viên đã quyết.
+  - **Không ai bị bỏ quên:** nếu người mua không bấm gì, hồ sơ vẫn tự lên nhân viên khi người bán phản hồi, xác nhận lỗi, hoặc hết hạn 48 giờ. Người mua được báo trong chat. Lần tự chuyển này không có nút hoàn tác, vì nó là bước của quy trình chứ không phải việc AI tự làm.
   - **Sau khi nhân viên quyết:** hồ sơ khoá (không gửi thêm ảnh, không gửi yêu cầu, không hoàn tác). Người mua thấy kết quả và lý do; nút “Gặp nhân viên” vẫn mở để khiếu nại lại nếu có bằng chứng mới. Người bán thấy kết quả.
   - **Không có quyết định hoàn tiền ở bước này:** K7 (nghi hàng giả → bộ phận chuyên trách), K8 (đòi SĐT → chat trong app), K10 (hỏi tiến độ → quyết định nằm ở hồ sơ gốc).
   - **K9 quá hạn:** người bán không được báo; nhân viên xét ngoại lệ, quyết được khi có ảnh.

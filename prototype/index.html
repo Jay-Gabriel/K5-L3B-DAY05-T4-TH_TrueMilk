@@ -332,7 +332,7 @@ const ORDER = ["K1","K2","K3","K4","K5","K6","K7","K8","K9","K10"];
 
 let scn = "K4";
 let S;
-function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false, shown:0, followed:false, chatSeller:false, sellerConfirmed:false, deadlinePassed:false, warn:"", rejected:false, rejectReason:"", moreEv:false}; }
+function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false, shown:0, followed:false, chatSeller:false, sellerConfirmed:false, deadlinePassed:false, warn:"", rejected:false, rejectReason:"", moreEv:false, autoRouted:false}; }
 fresh();
 
 const $ = id => document.getElementById(id);
@@ -344,6 +344,8 @@ function sellerOn(){
 }
 function hasEv(){ return !S.moreEv && (S.evidence || (DATA[scn].userChips||[]).length>0); }
 function decided(){ return S.approved || S.rejected; }
+/* Khi người bán đã phản hồi / xác nhận / hết hạn 48 giờ, hồ sơ tự lên nhân viên (không chờ người mua bấm). */
+function routeIfSellerDone(){ if(sellerOn() && sellerDone() && !S.escalated){ S.escalated = true; S.autoRouted = true; } }
 function sellerDone(){ return S.sellerReply!=="" || S.sellerConfirmed || S.deadlinePassed; }
 function renderSteps(){
   const D = DATA[scn], sOn = sellerOn();
@@ -352,7 +354,7 @@ function renderSteps(){
   st.push([ "2 · Bằng chứng", !S.sent ? "" : (hasEv() ? "done" : "now"), !S.sent ? "" : (hasEv() ? "Đã có ảnh" : (S.moreEv ? "Nhân viên cần thêm ảnh" : "Cần ảnh bằng chứng")) ]);
   st.push([ "3 · Người bán phản hồi (48 giờ)", !S.sent ? "" : (!sOn ? "na" : (sellerDone() ? "done" : "now")),
             !S.sent ? "" : (!sOn ? "Chưa áp dụng ở bước này" : (S.deadlinePassed ? "Đã hết hạn" : (sellerDone() ? "Đã phản hồi / xác nhận" : "Đang chờ"))) ]);
-  st.push([ "4 · Nhân viên quyết", decided() ? "done" : (S.escalated ? "now" : ""), S.approved ? "Đã duyệt hoàn tiền" : (S.rejected ? "Không duyệt · tiền về người bán" : (S.escalated ? "Đang xem hồ sơ" : "Chưa có hồ sơ")) ]);
+  st.push([ "4 · Nhân viên quyết", decided() ? "done" : (S.escalated ? "now" : ""), S.approved ? "Đã duyệt hoàn tiền" : (S.rejected ? "Không duyệt · tiền về người bán" : (S.escalated ? "Đang xem hồ sơ" : (sOn && S.sent ? "Tự lên khi người bán xong bước 3" : "Chưa có hồ sơ"))) ]);
   $("steps").innerHTML = st.map(s=>'<li class="step '+s[1]+'"><b>'+s[0]+'</b>'+s[2]+'</li>').join("");
 }
 function cmpTable(D){
@@ -401,7 +403,7 @@ function renderChat(){
   }
   if(S.chatSeller) addMsg("sys","✓ Đã mở khung chat với người bán ngay trong ứng dụng (mô phỏng). Không có số điện thoại hay địa chỉ nào được chia sẻ.");
   if(S.evidence) addMsg("sys", D.evidenceNote || ("✓ Đã đính kèm 2 ảnh bằng chứng (mô phỏng)."+(sellerOn()?" Người bán được báo, hạn phản hồi 48 giờ còn chạy.":"")));
-  if(S.escalated) addMsg("sys",'✓ Hồ sơ đã chuyển cho '+(D.humanLabel?'bộ phận chuyên trách':'nhân viên')+'.'+(!S.requested && !decided() ? ' <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>' : ''));
+  if(S.escalated) addMsg("sys",'✓ Hồ sơ đã chuyển cho '+(D.humanLabel?'bộ phận chuyên trách':'nhân viên')+'.'+(S.autoRouted ? ' (tự chuyển vì người bán đã xong bước phản hồi)' : '')+(!S.requested && !decided() && !S.autoRouted ? ' <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>' : ''));
   if(S.requested) addMsg("sys","✓ Đã gửi yêu cầu. Trạng thái: chờ người bán phản hồi (48 giờ) → nhân viên xem xét. <b>Chưa có khoản hoàn nào được thực hiện.</b>");
   if(S.moreEv) addMsg("warn","Nhân viên cần thêm bằng chứng. Bạn bấm “Gửi ảnh bằng chứng” để gửi thêm ảnh nhé.");
   if(S.approved) addMsg("sys","✓ Nhân viên đã duyệt hoàn tiền. Hồ sơ đã đóng; bạn sẽ nhận hướng dẫn trả hàng (mô phỏng).");
@@ -458,7 +460,7 @@ function renderS2(){
   /* Nhân viên */
   let staff = '<h2>Nhân viên xử lý khiếu nại</h2>';
   if(noCase || !S.escalated){
-    staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm chuyển hoặc đã hoàn tác).')+'</p>';
+    staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : (sOn ? 'Chưa có hồ sơ: hồ sơ sẽ tự chuyển lên khi người bán phản hồi, xác nhận, hoặc hết hạn 48 giờ (hoặc sớm hơn nếu người mua bấm “Gặp nhân viên”).' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm chuyển hoặc đã hoàn tác).'))+'</p>';
   } else {
     const evShown = hasEv();
     const fast = !!(D.sellerConfirm && S.sellerConfirmed);
@@ -493,9 +495,9 @@ function renderS2(){
   $("staffPanel").innerHTML = staff;
   renderSteps();
 
-  const sb=$("sellerSend"); if(sb) sb.onclick=()=>{ const v=$("sr").value.trim(); if(!v){$("sr").focus();return;} S.sellerReply=v.replace(/[<>&]/g,""); renderS2(); };
-  const ex=$("expireBtn"); if(ex) ex.onclick=()=>{ S.deadlinePassed=true; renderChat(); renderS2(); };
-  const sc=$("sellerConfirm"); if(sc) sc.onclick=()=>{ S.sellerConfirmed=true; renderS2(); };
+  const sb=$("sellerSend"); if(sb) sb.onclick=()=>{ const v=$("sr").value.trim(); if(!v){$("sr").focus();return;} S.sellerReply=v.replace(/[<>&]/g,""); routeIfSellerDone(); renderChat(); renderS2(); };
+  const ex=$("expireBtn"); if(ex) ex.onclick=()=>{ S.deadlinePassed=true; routeIfSellerDone(); renderChat(); renderS2(); };
+  const sc=$("sellerConfirm"); if(sc) sc.onclick=()=>{ S.sellerConfirmed=true; routeIfSellerDone(); renderChat(); renderS2(); };
   const recap = ()=>{
     const diff = D.rows.length ? '<li>Đối chiếu: '+D.rows.map(r=>r[0]+": "+r[1]+" → "+r[2]).join("; ")+'</li>' : '';
     return '<ul>'+diff+'<li>Bằng chứng người mua: '+(hasEv()?"đã có":"<b>chưa có</b>")+'</li><li>Phản hồi người bán: '+(S.sellerReply?"đã có":(S.sellerConfirmed?"người bán đã xác nhận lỗi":(S.deadlinePassed?"không phản hồi, đã hết hạn 48 giờ":"<b>chưa có</b>")))+'</li></ul>';
