@@ -2,9 +2,8 @@
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Trần Thị Hạ Anh | [MÃ] | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí kiểm định chất lượng |
-| Trần Gia Bảo | [MÃ] | §4, §5, §7: ma trận mức tự chủ, xây dựng prototype tương tác, chuẩn bị demo |
-| [Thành viên 3] | [MÃ] | Đọc chéo phản biện spec, kiểm thử kịch bản ngoại lệ trên prototype và chuẩn bị phản biện ca lạ |
+| Trần Thị Hạ Anh | 2A202603887 | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí kiểm định chất lượng |
+| Trần Gia Bảo | 2A202603914 | §4, §5, §7: ma trận mức tự chủ, xây dựng prototype tương tác, chuẩn bị demo |
 
 ---
 
