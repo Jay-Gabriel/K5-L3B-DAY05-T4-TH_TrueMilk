@@ -174,6 +174,12 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 - **Công cụ:** HTML + CSS + JavaScript thuần (`prototype/index.html`), kèm Three.js (đã đóng gói sẵn trong `prototype/scene.bundle.js`, mã nguồn `scene.src.js`) chỉ để làm nền 3D và cái cân trung lập ở header, không ảnh hưởng logic. Chạy offline bằng cách mở file, không cần backend, dữ liệu giả lập, không lưu cookie/tracker. Không có lời gọi AI thật; nếu trình duyệt không hỗ trợ WebGL thì phần 3D tự tắt và giao diện vẫn dùng bình thường.
 - **Đường dẫn truy cập:** [prototype/index.html](prototype/index.html) (mở trực tiếp bằng bất kỳ trình duyệt nào). Bộ ảnh chụp minh chứng có đánh số: `prototype/screen1-K4.png`, `prototype/screen2-K4.png`, `prototype/screen1-K6.png`.
 - **10 kịch bản bấm được (K1–K10, khớp bảng §2):** chọn bằng hàng nút phía trên; K4 và K6 (hai ca đắt nhất) có dấu ⭐. Mỗi ca hiển thị lớp rủi ro và nhãn mức hại ở khung bên phải. Ảnh minh hoạ thêm: `prototype/screen1-K1.png`.
+- **Quy trình và các điều kiện chặn (validation) trong prototype:**
+  - Thanh tiến trình 4 bước luôn hiện ở đầu trang: ① Người mua báo → ② Bằng chứng → ③ Người bán phản hồi (48 giờ) → ④ Nhân viên quyết. Mỗi bước hiện trạng thái *đang chờ / xong / chưa áp dụng*, để cả hai bên biết hồ sơ đang ở đâu.
+  - Người mua **không gửi được** yêu cầu trả hàng/hoàn tiền khi chưa đính kèm ảnh bằng chứng (hiện cảnh báo đỏ). Nút “Gặp nhân viên” thì **không bị chặn** để người mua không bị kẹt với bot.
+  - Nhân viên **không bấm được** “Duyệt hoàn tiền” khi chưa đủ hai điều kiện: có bằng chứng của người mua (hoặc người bán đã xác nhận lỗi) **và** người bán đã phản hồi/xác nhận hoặc đã hết hạn 48 giờ. Nút mờ đi kèm danh sách ✓/✗ lý do. Nút “Giả lập: hết hạn 48 giờ” chỉ để demo.
+  - Ca AI đánh giá “chưa đủ căn cứ” (K5, K6): màn nhân viên nhắc lại đánh giá đó, để nhân viên kiểm lại trước khi quyết khác.
+  - Điều kiện chặn này làm đúng điều §4 đã nói: một bước người duyệt chỉ có ý nghĩa khi người đó thấy đủ hai phía.
 - **Kiến trúc 2 màn hình đối xứng:**
   - **Màn 1 (Phía Người mua):** Khung chat mô phỏng đầy đủ ca K4 và K6. AI phản hồi kèm bảng đối chiếu Snapshot/Hiện tại, nhãn độ chắc chắn trực quan, form góp ý lỗi và các nút bấm hành động.
   - **Màn 2 (Phía Người bán & Nhân viên):** Người bán theo dõi khiếu nại kèm đồng hồ đếm ngược hạn phản hồi 48h; Nhân viên tiếp nhận hồ sơ tóm tắt và giữ nút *Duyệt hoàn tiền* (phía AI tuyệt đối không có nút duyệt này).

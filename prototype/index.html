@@ -64,6 +64,15 @@
   .legend{font-size:12px;color:var(--mut);margin-top:12px}
   .legend li{margin:2px 0}
   .grp.scn{flex-wrap:wrap}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;max-width:1000px;margin:12px auto 0;padding:0 16px;list-style:none;position:relative;z-index:1}
+  .step{flex:1;min-width:160px;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:12px;color:var(--mut)}
+  .step b{display:block;color:var(--ink);font-size:13px}
+  .step.done{border-color:#86efac;background:#f0fdf4}.step.done b::before{content:"✓ "}
+  .step.now{border-color:#fdba74;background:#fff7ed;box-shadow:0 0 0 2px #fed7aa}
+  .step.na{opacity:.65}
+  .msg.warn{align-self:center;background:var(--badbg);color:var(--bad);font-size:13px;padding:6px 10px}
+  ul.chk{list-style:none;margin:6px 0;padding:0;font-size:13px}
+  ul.chk li.ok{color:var(--ok)}ul.chk li.no{color:var(--bad)}
   .grp.scn button{padding:5px 9px;font-size:13px}
 
   /* ===== Lớp giao diện đẹp hơn (chỉ thay diện mạo, không đổi logic) ===== */
@@ -121,6 +130,7 @@
   <button id="reset" class="ghost">Làm lại ca này</button>
 </div>
 
+<ol id="steps" class="steps" aria-label="Tiến trình hồ sơ"></ol>
 <main>
 <!-- ================= MÀN 1 ================= -->
 <section id="screen1" class="screen show" aria-label="Màn 1: người mua">
@@ -322,7 +332,7 @@ const ORDER = ["K1","K2","K3","K4","K5","K6","K7","K8","K9","K10"];
 
 let scn = "K4";
 let S;
-function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false, shown:0, followed:false, chatSeller:false, sellerConfirmed:false}; }
+function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false, shown:0, followed:false, chatSeller:false, sellerConfirmed:false, deadlinePassed:false, warn:""}; }
 fresh();
 
 const $ = id => document.getElementById(id);
@@ -331,6 +341,18 @@ function addMsg(cls, html){ const d=document.createElement("div"); d.className="
 function sellerOn(){
   const n = DATA[scn].notify || [];
   return S.sent && n.some(t => t==="sent" || (t==="followup"&&S.followed) || (t==="evidence"&&S.evidence) || (t==="request"&&S.requested));
+}
+function hasEv(){ return S.evidence || (DATA[scn].userChips||[]).length>0; }
+function sellerDone(){ return S.sellerReply!=="" || S.sellerConfirmed || S.deadlinePassed; }
+function renderSteps(){
+  const D = DATA[scn], sOn = sellerOn();
+  const st = [];
+  st.push([ "1 · Người mua báo vấn đề", S.sent ? "done" : "now", S.sent ? "Đã gửi" : "Chờ người mua gửi tin" ]);
+  st.push([ "2 · Bằng chứng", !S.sent ? "" : (hasEv() ? "done" : "now"), !S.sent ? "" : (hasEv() ? "Đã có ảnh" : "Cần ảnh bằng chứng") ]);
+  st.push([ "3 · Người bán phản hồi (48 giờ)", !S.sent ? "" : (!sOn ? "na" : (sellerDone() ? "done" : "now")),
+            !S.sent ? "" : (!sOn ? "Chưa áp dụng ở bước này" : (S.deadlinePassed ? "Đã hết hạn" : (sellerDone() ? "Đã phản hồi / xác nhận" : "Đang chờ"))) ]);
+  st.push([ "4 · Nhân viên quyết", S.approved ? "done" : (S.escalated ? "now" : ""), S.approved ? "Đã duyệt" : (S.escalated ? "Đang xem hồ sơ" : "Chưa có hồ sơ") ]);
+  $("steps").innerHTML = st.map(s=>'<li class="step '+s[1]+'"><b>'+s[0]+'</b>'+s[2]+'</li>').join("");
 }
 function cmpTable(D){
   if(!D.rows.length) return "";
@@ -381,15 +403,18 @@ function renderChat(){
   if(S.escalated) addMsg("sys",'✓ Hồ sơ đã chuyển cho '+(D.humanLabel?'bộ phận chuyên trách':'nhân viên')+'. <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>');
   if(S.requested) addMsg("sys","✓ Đã gửi yêu cầu. Trạng thái: chờ người bán phản hồi (48 giờ) → nhân viên xem xét. <b>Chưa có khoản hoàn nào được thực hiện.</b>");
   if(S.approved) addMsg("sys","✓ Nhân viên đã duyệt hoàn tiền (xem Màn 2).");
+  if(S.warn) addMsg("warn","⚠ "+S.warn);
   S.shown = _mi;
 }
+function refreshSteps(){ renderSteps(); }
 $("chat").addEventListener("click", e=>{
   const a = e.target.closest("[data-act]"); if(!a) return;
   const act = a.dataset.act;
+  S.warn = "";
   if(act==="evidence" || act==="point"){ S.evidence = true; }
   if(act==="human"){ S.escalated = true; }
   if(act==="undoEsc"){ S.escalated = false; }
-  if(act==="request"){ S.requested = true; S.escalated = true; }
+  if(act==="request"){ if(!hasEv()){ S.warn = "Bạn cần đính kèm ảnh bằng chứng trước khi gửi yêu cầu trả hàng/hoàn tiền."; } else { S.requested = true; S.escalated = true; } }
   if(act==="choose"){ S.followed = true; }
   if(act==="chatSeller"){ S.chatSeller = true; }
   if(act==="fb"){ S.fbOpen = !S.fbOpen; }
@@ -415,11 +440,12 @@ function renderS2(){
   else if(!sOn){ seller += '<p class="empty">'+(D.sellerWhy||"Chưa có khiếu nại nào tới người bán ở bước này.")+'</p>'; }
   else{
     seller += '<p>'+D.sellerReason+'</p>'+
-      '<p><b>Hạn phản hồi: còn 47 giờ 59 phút</b> <span class="note">(sau hạn, nhân viên mới quyết)</span></p>'+
+      '<p><b>'+(S.deadlinePassed ? 'Hạn phản hồi: đã hết (mô phỏng)' : 'Hạn phản hồi: còn 47 giờ 59 phút')+'</b> <span class="note">(sau hạn, nhân viên mới quyết)</span></p>'+
       cmpTable(D)+
       (D.sellerConfirm ? (S.sellerConfirmed ? '<div class="msg sys">✓ Bạn đã xác nhận: đã gửi nhầm size.</div>' : '<div class="actions"><button id="sellerConfirm">'+D.sellerConfirm+'</button></div>') : '')+
       (S.sellerReply ? '<div class="msg sys">Đã gửi phản hồi: “'+S.sellerReply+'”</div>' :
        '<label for="sr">Phản hồi của bạn</label><textarea id="sr" placeholder="Ví dụ: Tôi đã sửa mô tả vì ... / Hàng gửi đúng theo đơn."></textarea><div class="actions"><button id="sellerSend" class="primary">Gửi phản hồi</button></div>')+
+      (!sellerDone() ? '<div class="actions"><button id="expireBtn" class="ghost">Giả lập: hết hạn 48 giờ (chỉ để demo)</button></div>' : '')+
       '<p class="note">Người bán không thấy số điện thoại hay địa chỉ của người mua.</p>';
   }
   $("sellerPanel").innerHTML = seller;
@@ -429,12 +455,12 @@ function renderS2(){
   if(noCase || !S.escalated){
     staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm chuyển hoặc đã hoàn tác).')+'</p>';
   } else {
-    const hasEv = S.evidence || (D.userChips||[]).length>0;
+    const evShown = hasEv();
     const fast = !!(D.sellerConfirm && S.sellerConfirmed);
     staff += '<p><b>Hồ sơ '+D.order+'</b></p>'+
       '<p><b>Tóm tắt của AI</b> (chỉ để tham khảo, không phải kết luận):<br>'+D.staffDraft+'</p>'+
       '<table class="cmp"><tbody>'+
-        '<tr><th scope="row">Bằng chứng người mua</th><td>'+(hasEv ? "Đã có ảnh" : "Chưa có")+'</td></tr>'+
+        '<tr><th scope="row">Bằng chứng người mua</th><td>'+(evShown ? "Đã có ảnh" : "Chưa có")+'</td></tr>'+
         '<tr><th scope="row">Phản hồi người bán</th><td>'+(S.sellerReply ? "“"+S.sellerReply+"”" : (sOn ? "Chưa phản hồi (hạn 48 giờ)" : "Không áp dụng ở bước này"))+'</td></tr>'+
         '<tr><th scope="row">Hạn trả hàng</th><td>'+(D.deadlineText||"Còn 5 ngày (theo chính sách trong bài)")+'</td></tr>'+
       '</tbody></table>'+
@@ -444,14 +470,24 @@ function renderS2(){
     } else if(S.approved){
       staff += '<div class="msg sys">✓ Đã duyệt hoàn tiền.</div>';
     } else {
+      const evOk = hasEv() || fast, slOk = !sOn || sellerDone();
+      const can = evOk && slOk;
       staff += (fast ? '<div class="msg sys"><b>Làn duyệt nhanh:</b> người bán đã xác nhận lỗi. Nhân viên vẫn là người bấm.</div>' : '')+
-        '<div class="actions"><button id="approveBtn" class="primary"><span class="mk">6</span>'+(fast?'Duyệt nhanh hoàn tiền (1 cú bấm)':'Duyệt hoàn tiền')+' <span class="tag approve">cần duyệt</span></button> <button id="needMore">Yêu cầu thêm bằng chứng</button></div>';
+        '<p class="note"><b>Điều kiện trước khi duyệt:</b></p><ul class="chk">'+
+        '<li class="'+(evOk?'ok':'no')+'">'+(evOk?'✓':'✗')+' Có bằng chứng của người mua (hoặc người bán đã xác nhận lỗi)</li>'+
+        (sOn ? '<li class="'+(slOk?'ok':'no')+'">'+(slOk?'✓':'✗')+' Người bán đã phản hồi / xác nhận, hoặc đã hết hạn 48 giờ</li>' : '')+
+        '</ul>'+
+        (D.badge[0]==='nobasis' ? '<p class="note"><b>Lưu ý:</b> AI đánh giá “chưa đủ căn cứ”. Nếu bạn quyết khác, hãy kiểm lại bằng chứng.</p>' : '')+
+        '<div class="actions"><button id="approveBtn" class="primary" '+(can?'':'disabled aria-disabled="true"')+'><span class="mk">6</span>'+(fast?'Duyệt nhanh hoàn tiền (1 cú bấm)':'Duyệt hoàn tiền')+' <span class="tag approve">cần duyệt</span></button> <button id="needMore">Yêu cầu người mua gửi thêm bằng chứng (mô phỏng)</button></div>'+
+        (can ? '' : '<p class="note">Chưa thể duyệt: còn thiếu điều kiện ở trên. Việc này chặn hoàn tiền khi chưa nghe đủ hai bên.</p>');
     }
     staff += '<p class="note"><span class="mk">7</span>Phía AI không có nút “Hoàn tiền”, “Từ chối khiếu nại”, “Phạt shop”. Chỉ nhân viên mới hoàn tiền.</p>';
   }
   $("staffPanel").innerHTML = staff;
+  renderSteps();
 
   const sb=$("sellerSend"); if(sb) sb.onclick=()=>{ const v=$("sr").value.trim(); if(!v){$("sr").focus();return;} S.sellerReply=v.replace(/[<>&]/g,""); renderS2(); };
+  const ex=$("expireBtn"); if(ex) ex.onclick=()=>{ S.deadlinePassed=true; renderChat(); renderS2(); };
   const sc=$("sellerConfirm"); if(sc) sc.onclick=()=>{ S.sellerConfirmed=true; renderS2(); };
   const ab=$("approveBtn"); if(ab) ab.onclick=()=>{
     const diff = D.rows.length ? '<li>Đối chiếu: '+D.rows.map(r=>r[0]+": "+r[1]+" → "+r[2]).join("; ")+'</li>' : '';
@@ -489,7 +525,7 @@ function setScn(k){
 $("tab1").onclick=()=>setTab(1); $("tab2").onclick=()=>setTab(2);
 $("reset").onclick=()=>setScn(scn);
 $("marks").onchange=e=>document.body.classList.toggle("marks", e.target.checked);
-renderChat(); renderS2();
+renderChat(); renderS2(); renderSteps();
 </script>
 <script src="scene.bundle.js"></script>
 </body>
