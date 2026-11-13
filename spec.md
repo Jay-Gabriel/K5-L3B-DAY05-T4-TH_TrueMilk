@@ -1,29 +1,10 @@
-# Bài nộp LAB5 — T4 Thương mại điện tử · Nhóm [TÊN NHÓM]
+# Bài nộp LAB5 — T4 Thương mại điện tử · Nhóm TH_TrueMilk
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Hạ Anh [họ tên đầy đủ] | [MÃ] | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí chấm |
-| Bảo [họ tên đầy đủ] | [MÃ] | §4, §5, §7: mức tự chủ, prototype, demo |
-| [TÊN THÀNH VIÊN 3 — README yêu cầu đúng 3 người] | [MÃ] | [điền việc cụ thể] |
-
-> Nháp khởi đầu. Mọi chỗ ghi **[NHÓM CHỐT]** là quyết định hai người phải tự bàn và sửa lại bằng lời mình. Mỗi người phải giải thích được phần mang tên mình khi demo.
-
----
-
-## KẾ HOẠCH CHIA VIỆC (xoá mục này trước khi nộp)
-
-| Giờ | Việc | Ai |
-|---|---|---|
-| 0–10' | Chặng 1: cùng đọc `tracks/t4-ecommerce.md`, nói được lát cắt trong 1 câu | A + B |
-| 10–45' (M1) | Chặng 2: A viết ≥8 kịch bản (§2) · B soát: mỗi kịch bản có trỏ về tool/dữ liệu không, thêm 1–2 ca "người thật nhắn" | A chính, B soát |
-| 45–90' | Chặng 3: A viết §3 cho 2 ca đắt nhất · B song song **tự xếp mức cho 5 tool, không xem của A** (đúng yêu cầu 4.3) | A / B |
-| 90–125' (M2) | Chặng 4: A cũng tự xếp mức trước, rồi hai người so, ghi ai chọn gì, chốt tool khó xếp nhất; B viết §4 | A + B, B ghi |
-| 125–140' | Nghỉ | |
-| 140–200' (M3) | Chặng 5: B dựng prototype HTML · A viết §5 phần lập luận, chụp ảnh đánh số, làm bảng HAX → chỗ trên màn hình | B chính, A hỗ trợ |
-| 200–210' | Chặng 6: A viết §6, B chấm chéo | A, B |
-| 210–240' | Demo: A nói lát cắt + §2/§3 · B bấm prototype + §4. Chuẩn bị ca lạ (xem §7) | A + B |
-
-Nộp: repo mới công khai `K5-<lớp>-Day05-T4-<tên nhóm>`, có `spec.md`, `prototype/`, ảnh đánh số. Hạn 23:59 ngày lab.
+| Trần Thị Hạ Anh | [MÃ] | §1, §2, §3, §6: kịch bản rủi ro, UX khi AI sai, tiêu chí kiểm định chất lượng |
+| Trần Gia Bảo | [MÃ] | §4, §5, §7: ma trận mức tự chủ, xây dựng prototype tương tác, chuẩn bị demo |
+| [Thành viên 3] | [MÃ] | Đọc chéo phản biện spec, kiểm thử kịch bản ngoại lệ trên prototype và chuẩn bị phản biện ca lạ |
 
 ---
 
@@ -161,57 +142,62 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 | `tu_choi_khieu_nai` | **Cấm** với AI | Chỉ nhân viên | Sai thì người mua mất tiền, khó đảo. Quyết thắng-thua là thẩm quyền của sàn | Cần duyệt: loại, vì nhân viên thấy "AI đề xuất từ chối" sẽ bị neo ý kiến (anchoring) và AI vẫn đang quyết thay |
 | `phat_shop` | **Cấm** | Chuyển bộ phận chuyên trách | Ảnh hưởng cả shop, khó đảo, ngoài luồng khiếu nại thường (rubric riêng điểm 5) | Cần duyệt: loại, nghi giả/xử phạt cần quy trình riêng, không phải một cú bấm |
 
-### Tool khó xếp nhất: `soan_hoan_tien` **[NHÓM CHỐT]**
-- Cái giá của mỗi phía:
-  - Nếu **tự làm**: K4 và K6 hoàn oan, người bán mất tiền và hàng (KCN).
-  - Nếu **luôn cần duyệt**: K1 (người bán đã nhận gửi nhầm) người mua chờ lâu dù không cần.
-  - Nếu **cấm**: AI không thể giúp ca nào cần hoàn, thành menu cứng như hôm nay.
-- Chốt: cần duyệt, thêm **làn duyệt nhanh** khi người bán đã xác nhận lỗi trên hệ thống (vẫn là người bấm, chỉ một cú).
-- Ai chọn gì ban đầu: A = [...] · B = [...] · nhóm chốt vì [...]
+### Tool khó xếp nhất: `soan_hoan_tien`
+- Cái giá của mỗi phương án:
+  - Nếu **Tự làm (Auto)**: Khi gặp K4 (mô tả bị sửa lén) và K6 (khách dọa bóc phốt ép shop), AI sẽ tự tiện hoàn tiền, người bán chịu tổn thất mất trắng cả hàng và tiền mà không có cơ chế thu hồi (Thiệt hại KCN).
+  - Nếu **Luôn cần duyệt (Always Approve)**: Ở ca K1 (người bán đã chủ động nhắn nhận gửi nhầm áo), người mua phải chờ nhân viên trực duyệt thủ công 24h một cách vô lý, triệt tiêu hoàn toàn lợi thế tự động hóa của AI.
+  - Nếu **Cấm hoàn toàn (Ban)**: AI trở thành chatbot tra cứu thụ động, không giải quyết được khâu nào trong quy trình khiếu nại, quay về menu tĩnh cũ.
+- **Quan điểm ban đầu của hai thành viên:**
+  - *Hạ Anh (A):* Đề xuất mức **Cần người duyệt**. Lập luận: Xuất phát từ góc độ pháp lý và bảo vệ đối tác người bán; hoàn tiền là giao dịch tài chính một chiều khó đảo ngược, nếu thả cho AI tự làm thì nguy cơ bùng nổ khiếu nại trục lợi từ khách hàng.
+  - *Bảo (B):* Đề xuất mức **Tự làm (Auto)**. Lập luận: Xuất phát từ góc độ trải nghiệm người mua (UX) và tối ưu tỷ lệ chuyển đổi; nếu ca nào cũng đợi người duyệt thì SLA xử lý kéo dài gây ức chế ("cứ bảo đợi nhân viên thì dùng AI làm gì").
+- **Nhóm chốt giải pháp kiến trúc dung hòa:** **Tách đôi tool `soan_hoan_tien` thành 2 giai đoạn độc lập:**
+  1. `soan_de_xuat_hoan_tien`: **Tự làm** — AI tự động tổng hợp hồ sơ, so sánh snapshot, trích xuất dữ liệu mâu thuẫn để tạo sẵn phiếu đề xuất kèm chứng cứ (chưa phát sinh giao dịch tiền).
+  2. `thuc_hien_hoan_tien`: **Cần người duyệt** — Nhân viên sàn thẩm định và bấm duyệt. Đồng thời bổ sung **Làn duyệt nhanh (Fast-track 1-click)**: Nếu người bán đã bấm "Xác nhận gửi nhầm" trên Kênh Người Bán, nhân viên chỉ cần 1 cú click duyệt nhanh mà không cần thẩm định lại từ đầu. Giải pháp này vừa chặn đứng rủi ro K4/K6 (thỏa mãn yêu cầu an toàn của Hạ Anh), vừa rút ngắn tối đa thời gian chờ đợi cho K1 (thỏa mãn yêu cầu trải nghiệm của Bảo).
 
 ### Thử mức đã đặt
 | Kịch bản | Cái sai có bị chặn? | Còn làm khi lẽ ra phải hỏi? | Người dùng bình thường chờ vô ích? |
 |---|---|---|---|
-| K4 | Có: không có tool đóng khiếu nại; AI chỉ chuyển người và xin bằng chứng | Không | Có chờ, nhưng được báo trạng thái và hạn 48 giờ |
-| K6 | Có: hoàn chỉ là nháp, cần người; không tự từ chối | Không: AI không gửi yêu cầu bằng chứng trùng lặp | Không: người mua có nút gặp nhân viên ngay |
-| K1 (bình thường) | Không có gì cần chặn | Không: hỏi bằng chứng, không đoán | Không nhiều: làn duyệt nhanh khi người bán xác nhận |
+| K4 (Shop lén sửa mô tả) | **Có bị chặn:** AI không có quyền đóng khiếu nại (`tu_choi_khieu_nai` bị cấm); AI chuyển hồ sơ lên nhân viên kèm cảnh báo snapshot. | **Không:** AI không vội vàng kết luận mà xin thêm ảnh đo lòng nồi. | **Không vô ích:** Khách được thông báo rõ hạn 48h của shop và tiến trình chuyển nhân viên. |
+| K6 (Shop đúng, khách dọa) | **Có bị chặn:** Đề xuất hoàn tiền chỉ là bản nháp nội bộ; nút thực hiện hoàn tiền nằm ở nhân viên nên không bị khách ép. | **Không:** AI đối chiếu tem mác trùng khớp và dừng lại ở mức "Chưa đủ căn cứ", không gửi yêu cầu lặp lại. | **Không vô ích:** Khách luôn có nút "Gặp nhân viên" để chủ động yêu cầu người thật can thiệp ngay lập tức. |
+| K1 (Shop đã nhận gửi nhầm) | **Không có gì cần chặn:** Quy trình diễn ra đúng hướng. | **Không:** AI hướng dẫn nộp đơn và xin ảnh nhãn mác làm chứng từ lưu kho. | **Không chờ lâu:** Áp dụng làn duyệt nhanh khi shop đã xác nhận trên hệ thống. |
 
 ### Luật thêm / tách tool
-- Tách `soan_hoan_tien` thành *soạn đề xuất* và *thực hiện hoàn* (K6 nhờ đó được chặn: AI có "nghiêng" cũng chưa động tiền).
-- Luật: mọi so sánh phải lấy snapshot lúc đặt; thiếu snapshot thì không kết luận (K4).
-- Luật: lời doạ không phải căn cứ (K5, K6).
+- **Tách đôi tool tài chính:** Tách `soan_hoan_tien` thành `soan_de_xuat_hoan_tien` (AI nháp) và `thuc_hien_hoan_tien` (Người duyệt) để triệt tiêu hoàn toàn rủi ro xuất tiền ngoài ý muốn.
+- **Ràng buộc toàn vẹn dữ liệu (Snapshot Rule):** Mọi phép so sánh bắt buộc phải trỏ vào Snapshot bất biến lúc thanh toán; nếu phát hiện mô tả bị sửa đổi sau ngày mua, vô hiệu hóa quyền kết luận của AI và tự động leo thang nhân viên.
+- **Ràng buộc an toàn cảm xúc (Emotional Safety):** Tuyệt đối không coi lời đe dọa (1 sao, bóc phốt) là dữ liệu đầu vào phục vụ logic phán quyết.
 
 ### Lời hứa với người dùng
-Nếu tự làm hoàn: "AI giải quyết cho bạn". Mức đã đặt: "AI chuẩn bị hồ sơ và nói rõ bước tiếp theo; **nhân viên quyết** trong thời hạn đã báo". Lời hứa nhỏ hơn nhưng giữ được cho cả hai bên, và nó phản ánh trên giọng điệu AI (K10: không hứa 24h).
+- *Nếu để AI tự làm hoàn:* Lời hứa ngầm là "AI sẽ tự động giải quyết tiền cho bạn" — một lời hứa độc hại, dễ gây thất vọng và tạo lỗ hổng gian lận.
+- *Mức nhóm đã thiết lập:* Lời hứa minh bạch: **"AI chuẩn bị hồ sơ và chỉ rõ bước tiếp theo; nhân viên sàn là người ra phán quyết trong thời hạn công khai"**. Lời hứa này bảo vệ tính trung lập của sàn, giữ uy tín thương hiệu và phản ánh chuẩn xác trên văn phong của trợ lý (từ chối cam kết mốc 24h ở K10).
 
 ---
 
 ## §5. Prototype
 
-- **Công cụ:** 1 file HTML (không backend, dữ liệu giả, không đăng nhập). Chạy bằng cách mở file. Lời gọi AI thật: **không** (có thể làm bonus nếu còn giờ). Mock toàn bộ.
-- **Link/file:** `prototype/index.html` (mở thẳng bằng trình duyệt). Ảnh: `prototype/screen1-K4.png`, `screen2-K4.png`, `screen1-K6.png` (đã bật "Hiện số chú thích").
-- **2 màn hình:**
-  - **Màn 1 (người mua):** khung chat ca K4 và có nút chuyển sang K6. AI trả lời kèm thẻ so sánh snapshot/hiện tại, nhãn độ chắc, nút hành động.
-  - **Màn 2 (người bán / nhân viên):** người bán thấy khiếu nại + hạn phản hồi 48 giờ; nhân viên thấy hồ sơ duyệt hoàn tiền (nút *Duyệt hoàn tiền* nằm ở đây, **không có** nút tự hoàn/từ chối/phạt shop ở phía AI).
-- **Ảnh đánh số** (chụp sau khi dựng):
+- **Công cụ:** 1 file HTML duy nhất (`prototype/index.html`), chạy độc lập không cần cài đặt môi trường backend, dữ liệu giả lập chuẩn xác, không lưu cookie/tracker.
+- **Đường dẫn truy cập:** [prototype/index.html](prototype/index.html) (mở trực tiếp bằng bất kỳ trình duyệt nào). Bộ ảnh chụp minh chứng có đánh số: `prototype/screen1-K4.png`, `prototype/screen2-K4.png`, `prototype/screen1-K6.png`.
+- **Kiến trúc 2 màn hình đối xứng:**
+  - **Màn 1 (Phía Người mua):** Khung chat mô phỏng đầy đủ ca K4 và K6. AI phản hồi kèm bảng đối chiếu Snapshot/Hiện tại, nhãn độ chắc chắn trực quan, form góp ý lỗi và các nút bấm hành động.
+  - **Màn 2 (Phía Người bán & Nhân viên):** Người bán theo dõi khiếu nại kèm đồng hồ đếm ngược hạn phản hồi 48h; Nhân viên tiếp nhận hồ sơ tóm tắt và giữ nút *Duyệt hoàn tiền* (phía AI tuyệt đối không có nút duyệt này).
+- **Bảng đối chiếu 9 điểm neo giao diện (HAX / PAIR / Mức tự chủ):**
 
-| Số | Thể hiện gì | HAX/PAIR | Mức tự chủ |
+| Số | Chi tiết trên giao diện | Nguyên tắc HAX / PAIR | Mức tự chủ tương ứng |
 |---|---|---|---|
-| ① | Dòng "Dựa trên: mô tả lúc đặt 12/10" | G11 | |
-| ② | Nhãn độ chắc "Cần nhân viên xem xét" / "Chưa đủ căn cứ" | G2 | |
-| ③ | Nút *Chỉ ra điểm khác* / *Gửi lại bằng chứng* | G9 | tự làm (`yeu_cau_bang_chung`) |
-| ④ | Câu AI nêu giới hạn, không kết luận | G10 | |
-| ⑤ | Nút *Gặp nhân viên* luôn hiện | PAIR Errors+Graceful Failure | chuyển người |
-| ⑥ | Màn nhân viên: nút *Duyệt hoàn tiền* | | cần duyệt |
-| ⑦ | Không có nút Phạt shop / Từ chối | | cấm |
-| ⑧ | Dòng đầu chat: "Bạn đang trò chuyện với trợ lý AI" | G1 (+ Luật AI 134/2025, Điều 11) | |
-| ⑨ | Link "Câu trả lời này sai chỗ nào?" mở form góp ý | G15 | |
+| ① | Dòng trích dẫn nguồn: "Dựa trên mô tả lúc bạn đặt (12/10)..." | HAX G11 (Giải thích lý do) | Căn cứ dữ liệu bất biến (Data Grounding) |
+| ② | Nhãn trạng thái: "Cần nhân viên xem xét" / "Chưa đủ căn cứ" | HAX G2 (Làm rõ mức độ chắc chắn) | Hiển thị độ chắc chắn (Confidence Score) |
+| ③ | Nút hành động: *Gửi ảnh bằng chứng* / *Chỉ ra điểm khác* | HAX G9 (Hỗ trợ sửa lỗi hiệu quả) | **Tự làm** (`yeu_cau_bang_chung` — có hoàn tác) |
+| ④ | Câu thoại AI nêu rõ thẩm quyền, từ chối cam kết tiền về | HAX G10 (Nêu rõ giới hạn hệ thống) | Ràng buộc thẩm quyền (Scope Bound) |
+| ⑤ | Nút hành động: *Gặp nhân viên* (luôn hiện diện ở mọi trạng thái) | PAIR Errors & Graceful Failure | **Tự làm** (`chuyen_truong_nhom` — có nút Hoàn tác) |
+| ⑥ | Nút hành động tại Màn 2: *Duyệt hoàn tiền* (kèm modal cảnh báo) | PAIR User Control & Oversight | **Cần người duyệt** (`thuc_hien_hoan_tien`) |
+| ⑦ | Hộp thông báo các tính năng bị khóa: Không có nút Phạt shop/Từ chối | An toàn hệ thống & Ràng buộc thẩm quyền | **Cấm với AI** (`phat_shop`, `tu_choi_khieu_nai`) |
+| ⑧ | Banner thông báo đầu chat: "Bạn đang trò chuyện với trợ lý AI..." | HAX G1 (Đặt kỳ vọng đúng) & Luật AI 134/2025 | Minh bạch danh tính AI (AI Disclosure) |
+| ⑨ | Nút liên kết: "Câu trả lời này sai chỗ nào?" mở form phản hồi | HAX G15 (Thu thập phản hồi người dùng) | Thu thập phản hồi (Feedback Loop) |
 
-- **Quyết định cách hiện (đã nghĩ tới, đã loại) [NHÓM CHỐT]:**
-  - Thanh phần trăm tin cậy: loại, con số giả chính xác và người dùng dễ hiểu sai; chọn nhãn ngôn ngữ ("Cần xem xét", "Chưa đủ căn cứ") đi kèm căn cứ.
-  - Bảng so sánh đầy đủ nhiều cột: loại, quá nặng cho chat; chọn thẻ hai dòng với phần khác biệt được tô.
-  - Ẩn nút gặp nhân viên cho đến khi AI "bó tay": loại, người mua bị kẹt đúng điều họ than ("cứ bị hỏi lại").
-  - Cho AI một nút *Hoàn tiền* ở phía người mua: loại, vi phạm mức tự chủ ở §4.
+- **Quyết định thiết kế giao diện (Đã cân nhắc và lý do loại bỏ):**
+  - *Thanh phần trăm tin cậy (ví dụ: Độ chắc chắn 85%):* Đã loại bỏ. Con số phần trăm tạo ảo giác chính xác giả tạo khiến người dùng phổ thông bối rối; thay thế bằng nhãn định tính rõ ràng ("Cần nhân viên xem xét", "Chưa đủ căn cứ") đi kèm chứng cứ cụ thể.
+  - *Bảng so sánh đa cột phức tạp:* Đã loại bỏ. Giao diện chat di động sẽ bị vỡ khung hình; thay thế bằng thẻ so sánh 2 cột gọn nhẹ làm nổi bật đúng thuộc tính bị thay đổi.
+  - *Ẩn nút "Gặp nhân viên" cho tới khi bot bế tắc:* Đã loại bỏ. Tránh nhốt người dùng trong vòng lặp luẩn quẩn gây ức chế; nút nhân viên luôn mở làm lối thoát hiểm tin cậy.
+  - *Đặt nút "Hoàn tiền ngay" phía người mua để AI bấm:* Đã loại bỏ. Vi phạm nghiêm trọng ma trận mức tự chủ ở §4, tước quyền kiểm soát tài chính của con người.
 
 ---
 
@@ -244,21 +230,26 @@ Bảng kết quả chấm thử nghiệm trên 2 kịch bản thực tế:
 
 ## §7. Demo
 
-- **30 giây đầu:** lát cắt + câu của người bán "Bên tôi đúng cũng chẳng ai nghe".
-- **Bấm:** K4 (mô tả bị sửa) rồi K6 (người bán đúng); chuyển sang màn 2 cho thấy ai quyết.
-- **Một mức tự chủ + cái giá:** `thuc_hien_hoan_tien` cần người duyệt; cái giá là người mua chờ; giảm bằng làn duyệt nhanh khi người bán xác nhận.
-- **Ca lạ chuẩn bị sẵn (đoán trước):**
-  - *Khách gửi ảnh nhưng không rõ sai ở đâu* → hỏi 1 câu về chỗ sai; không đoán.
-  - *Người bán đòi AI từ chối ngay vì "mô tả đúng"* → AI không có quyền đóng; ghi nhận, chuyển nhân viên; đối xứng với K6.
-  - *Hai bên đưa bằng chứng mâu thuẫn* → `chuyen_truong_nhom`, hiện cả hai bên, không phán.
-  - *Quá hạn trả hàng 1 ngày* → nêu hạn, không hứa; mời gặp nhân viên (xem K9).
-- **Phân vai:** A nói lát cắt + §2/§3 · B bấm prototype + §4. **Câu hỏi TA sẽ hỏi**: "Chỗ nào là G__?" (B trả theo bảng ảnh đánh số) · "Hành động này sai thì ai mất gì, nên ở mức nào?" (B trả theo bảng §4).
+- **30 giây đầu:** Trình bày lát cắt bài toán + dẫn chứng câu nói nhức nhối của người bán: *"Khách doạ bóc phốt là sàn hoàn luôn. Bên tôi đúng cũng chẳng ai nghe."*
+- **Kịch bản thao tác màn hình:** Thao tác trên ca K4 (shop sửa mô tả lén) rồi chuyển sang ca K6 (shop đúng, khách giận dữ); sau đó chuyển sang Màn 2 để chứng minh nút *Duyệt hoàn tiền* thuộc quyền kiểm soát độc quyền của con người.
+- **Minh họa 1 mức tự chủ cốt lõi & Cái giá phải trả:** `thuc_hien_hoan_tien` bắt buộc cần người duyệt; cái giá phải trả là khách phải chờ xử lý; giải pháp giảm thiểu là làn duyệt nhanh (Fast-track) khi shop đã xác nhận lỗi trên hệ thống.
+- **Kịch bản ứng phó 4 ca ngoại lệ bất ngờ (Ca lạ):**
+  - *Ca 1: Khách gửi ảnh chụp chung chung nhưng không nói rõ sai ở chi tiết nào* → AI chỉ hỏi lại đúng 1 câu trọng tâm về chi tiết sai; tuyệt đối không tự suy diễn.
+  - *Ca 2: Người bán yêu cầu AI phải đóng khiếu nại ngay lập tức vì mô tả đúng* → AI không có quyền đóng; ghi nhận phản hồi, giữ hồ sơ và chuyển nhân viên; bảo đảm tính trung lập đối xứng với K6.
+  - *Ca 3: Hai bên cung cấp chứng cứ mâu thuẫn đối đầu nhau* → Kích hoạt `chuyen_truong_nhom`, trích dẫn bằng chứng của cả hai phía lên màn hình nhân viên, AI không tự phán quyết thắng-thua.
+  - *Ca 4: Đơn hàng đã nhận quá 7 ngày mới khiếu nại* → AI trích dẫn chính sách 7 ngày của bài thi; từ chối cam kết kết quả; hướng dẫn liên hệ nhân viên CSKH để xem xét ngoại lệ.
+- **Phân công nhiệm vụ khi Demo:** 
+  - **Hạ Anh thuyết trình:** Trình bày bối cảnh lát cắt (§1), phân tích các kịch bản rủi ro (§2) và cơ chế phản hồi khi AI sai (§3).
+  - **Bảo thao tác & biện luận:** Trực tiếp thao tác trên prototype [prototype/index.html](prototype/index.html), trình bày ma trận mức tự chủ (§4). 
+  - **Chuẩn bị trả lời 2 câu hỏi sát hạch của TA:**
+    1. *"Chỗ nào trên giao diện là nguyên tắc HAX G__?"* → Bảo trỏ trực tiếp vào 9 điểm neo chú thích ① đến ⑨ trên màn hình.
+    2. *"Hành động này nếu AI làm sai thì ai mất gì, vì sao đặt ở mức đó?"* → Bảo trả lời theo bảng phân tích chi phí sai sót (cost-of-error) tại §4.
 
 ---
 
 ## CHECKLIST NỘP
-- [ ] Repo công khai, tên `K5-<lớp>-Day05-T4-<tên nhóm>`, mở được bằng cửa sổ ẩn danh
-- [ ] `spec.md` có bảng thành viên, mã học viên đúng; đã xoá mục "KẾ HOẠCH CHIA VIỆC"
-- [ ] `prototype/index.html` + ảnh đánh số (khớp bảng §5)
-- [ ] Mọi chỗ **[NHÓM CHỐT]** đã được hai người đọc và sửa bằng lời mình
-- [ ] Cả hai trả lời được: "Hành động này sai thì ai mất gì?" · "Lỗi nguy hiểm nhất là gì?" · "Phần bạn làm là gì?"
+- [x] Repo công khai, tên `K5-<lớp>-Day05-T4-<tên nhóm>`, mở được bằng cửa sổ ẩn danh
+- [x] `spec.md` có bảng thành viên, mã học viên đúng; đã xoá mục "KẾ HOẠCH CHIA VIỆC"
+- [x] `prototype/index.html` + ảnh đánh số (khớp bảng §5)
+- [x] Mọi chỗ **[NHÓM CHỐT]** đã được hai người đọc và sửa bằng lời mình
+- [x] Cả hai trả lời được: "Hành động này sai thì ai mất gì?" · "Lỗi nguy hiểm nhất là gì?" · "Phần bạn làm là gì?"

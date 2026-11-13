@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype T4 — Trợ lý khiếu nại "hàng không đúng mô tả" (dữ liệu giả)</title>
+<style>
+  :root{--bg:#f4f4f6;--card:#fff;--ink:#1d1d1f;--mut:#5b5f66;--line:#d9dbe0;--brand:#c2410c;--ok:#166534;--warn:#92400e;--warnbg:#fef3c7;--info:#1e3a8a;--infobg:#dbeafe;--bad:#991b1b;--badbg:#fee2e2}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--brand);color:#fff;padding:10px 16px}
+  header h1{margin:0;font-size:16px}
+  header p{margin:2px 0 0;font-size:12px;opacity:.95}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+  .bar .grp{display:flex;gap:4px;align-items:center}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:8px}
+  button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+  button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  button.ghost{background:transparent}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  main{max-width:1000px;margin:0 auto;padding:16px}
+  .screen{display:none}.screen.show{display:block}
+  .cols{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:860px){.cols.two{grid-template-columns:1fr 1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .panel h2{margin:0 0 8px;font-size:15px}
+  #chat{display:flex;flex-direction:column;gap:10px;min-height:260px}
+  .disclose{background:var(--infobg);color:var(--info);border-radius:8px;padding:8px 10px;font-size:13px}
+  .msg{max-width:92%;padding:10px 12px;border-radius:12px;white-space:pre-wrap}
+  .msg.user{align-self:flex-end;background:#ffe9d9}
+  .msg.ai{align-self:flex-start;background:#f1f2f4}
+  .msg.sys{align-self:center;background:#ecfdf5;color:var(--ok);font-size:13px;padding:6px 10px}
+  .chips{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--mut)}
+  .badge{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;margin-bottom:6px}
+  .badge.review{background:var(--warnbg);color:var(--warn)}
+  .badge.nobasis{background:var(--infobg);color:var(--info)}
+  .basis{font-size:13px;color:var(--mut);margin:6px 0}
+  table.cmp{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0;background:#fff}
+  table.cmp th,table.cmp td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+  table.cmp .diff{background:var(--warnbg);font-weight:600}
+  table.cmp .match{background:#dcfce7}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .locked{background:#fafafa;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--mut)}
+  .locked ul{margin:4px 0 0 18px;padding:0}
+  .composer{display:flex;gap:8px;align-items:flex-start;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  .composer .sample{flex:1;background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}
+  .composer .lab{font-size:12px;color:var(--mut)}
+  .fb{font-size:12px;margin-top:6px}
+  .fb a{color:var(--info);cursor:pointer;text-decoration:underline;background:none;border:0;padding:0}
+  .note{font-size:12px;color:var(--mut)}
+  .tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:6px}
+  .tag.auto{background:#dcfce7;color:var(--ok)}
+  .tag.approve{background:var(--warnbg);color:var(--warn)}
+  .tag.ban{background:var(--badbg);color:var(--bad)}
+  .empty{color:var(--mut);font-style:italic}
+  textarea{width:100%;min-height:60px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px}
+  /* số chú thích để chụp ảnh */
+  .mk{display:none;background:#2563eb;color:#fff;border-radius:999px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;margin-right:4px;padding:0 4px}
+  body.marks .mk{display:inline-block}
+  dialog{border:1px solid var(--line);border-radius:12px;max-width:520px;padding:16px}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  .legend{font-size:12px;color:var(--mut);margin-top:12px}
+  .legend li{margin:2px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Trò chuyện với Shopee — bản mô phỏng (prototype T4, dữ liệu giả)</h1>
+  <p>Đây là bài thiết kế: không có backend, không dữ liệu thật. Chính sách trong bài: trả hàng trong <b>7 ngày</b> kể từ ngày nhận; người bán phản hồi trong <b>48 giờ</b> (giả định của bài, khác Shopee thật).</p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Điều khiển prototype">
+  <div class="grp" role="group" aria-label="Chọn màn hình">
+    <button id="tab1" class="on" aria-pressed="true">Màn 1 · Người mua (chat)</button>
+    <button id="tab2" aria-pressed="false">Màn 2 · Người bán &amp; Nhân viên</button>
+  </div>
+  <div class="grp" role="group" aria-label="Chọn kịch bản">
+    <span class="note">Ca:</span>
+    <button id="sK4" class="on" aria-pressed="true">K4 · Mô tả bị sửa</button>
+    <button id="sK6" aria-pressed="false">K6 · Người bán đúng</button>
+  </div>
+  <label class="grp"><input type="checkbox" id="marks"> Hiện số chú thích (để chụp ảnh)</label>
+  <button id="reset" class="ghost">Làm lại ca này</button>
+</div>
+
+<main>
+<!-- ================= MÀN 1 ================= -->
+<section id="screen1" class="screen show" aria-label="Màn 1: người mua">
+  <div class="cols two">
+    <div class="panel">
+      <h2>Trò chuyện với Shopee</h2>
+      <div class="disclose"><span class="mk">8</span>Bạn đang trò chuyện với <b>trợ lý AI</b> (bản mô phỏng). AI chuẩn bị hồ sơ và chỉ bước tiếp theo; <b>nhân viên quyết định hoàn tiền</b>.</div>
+      <div id="chat" role="log" aria-live="polite" aria-label="Nội dung trò chuyện"></div>
+      <div class="composer" id="composer">
+        <div style="flex:1"><div class="lab">Tin nhắn mẫu của ca này</div><div class="sample" id="sample"></div></div>
+        <button class="primary" id="sendBtn">Gửi</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Vì sao màn này như vậy</h2>
+      <p class="note" id="why"></p>
+      <div class="locked" aria-label="Việc AI không được làm">
+        <span class="mk">7</span><b>Việc AI không được làm (không có nút):</b>
+        <ul>
+          <li>Thực hiện hoàn tiền <span class="tag approve">nhân viên duyệt</span></li>
+          <li>Từ chối / đóng khiếu nại <span class="tag ban">cấm với AI</span></li>
+          <li>Phạt shop, khoá shop <span class="tag ban">cấm với AI</span></li>
+          <li>Đưa số điện thoại / địa chỉ của bên kia <span class="tag ban">cấm</span></li>
+        </ul>
+      </div>
+      <ul class="legend">
+        <li><span class="tag auto">tự làm</span> AI làm luôn, có nút hoàn tác.</li>
+        <li><span class="tag approve">cần duyệt</span> người bấm xác nhận (xem Màn 2).</li>
+        <li><span class="tag ban">cấm</span> không có nút nào làm được.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MÀN 2 ================= -->
+<section id="screen2" class="screen" aria-label="Màn 2: người bán và nhân viên">
+  <div class="cols two">
+    <div class="panel" id="sellerPanel"></div>
+    <div class="panel" id="staffPanel"></div>
+  </div>
+</section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <h2 id="dlgTitle" style="margin-top:0">Xác nhận duyệt hoàn tiền</h2>
+  <div id="dlgBody"></div>
+  <div class="actions" style="justify-content:flex-end">
+    <button id="dlgNo">Huỷ</button>
+    <button id="dlgYes" class="primary">Duyệt hoàn tiền</button>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+/* ---------- Dữ liệu dựng (giả) ---------- */
+const DATA = {
+  K4: {
+    order: "DEMO-0412 · Nồi chiên không dầu",
+    userMsg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Không đúng mô tả.",
+    userChips: [],
+    why: "Ca K4: người bán sửa mô tả sau khi khách đặt. AI so với BẢN CHỤP MÔ TẢ LÚC ĐẶT (12/10), không phải mô tả hiện tại. Không có tool nào cho AI đóng khiếu nại hay hoàn tiền; AI xin bằng chứng và chuyển nhân viên.",
+    badge: ["review", "Cần nhân viên xem xét"],
+    basis: "Dựa trên: mô tả lúc bạn đặt (12/10), mô tả hiện tại (người bán sửa 15/10 09:12), hạn trả hàng 7 ngày kể từ ngày nhận 14/10 → còn 5 ngày.",
+    aiText: "Mình thấy người bán đã chỉnh sửa mô tả sau khi bạn đặt hàng. Theo mô tả lúc bạn đặt (12/10), nồi ghi dung tích 6 lít, còn mô tả hiện tại ghi 5 lít.\n\nMình chưa thể quyết định hoàn tiền, vì người bán cần có thời gian phản hồi (48 giờ). Bạn gửi giúp mình ảnh nhãn sản phẩm và ảnh đo lòng nồi nhé. Mình đã chuyển hồ sơ cho nhân viên để xem xét.",
+    rows: [["Dung tích", "6 lít", "5 lít (sửa 15/10)", "diff"]],
+    colA: "Mô tả lúc bạn đặt (12/10)", colB: "Mô tả hiện tại",
+    autoEscalate: true,
+    primaryActions: ["evidence", "human", "request"],
+    sellerReason: "Người mua nói: \"Nồi chiên ghi 6 lít mà đo lòng nồi chỉ được 5 lít.\"",
+    staffDraft: "Có căn cứ ban đầu: mô tả lúc đặt ghi 6 lít, mô tả hiện tại 5 lít (sửa sau khi bán). AI KHÔNG soạn kết luận. Chờ ảnh đo + phản hồi người bán rồi mới quyết.",
+    staffAnchor: "Cần người bán phản hồi trước khi quyết."
+  },
+  K6: {
+    order: "DEMO-0577 · Áo thun nam",
+    userMsg: "Hàng không đúng mô tả!! Hoàn tiền ngay không thì mình đăng Facebook bóc phốt shop.",
+    userChips: ["anh_nhan_size_M.jpg", "anh_ao_nhan_duoc.jpg"],
+    why: "Ca K6: người bán đúng (nhãn size M khớp đơn size M) và người mua doạ bóc phốt. Lời doạ không phải căn cứ. AI dám nói \"chưa đủ căn cứ\", chỉ rõ điểm khớp, và luôn để nút gặp nhân viên.",
+    badge: ["nobasis", "Chưa đủ căn cứ"],
+    basis: "Dựa trên: mô tả lúc bạn đặt (size M, bạn đã chọn 12/10) và ảnh nhãn bạn gửi.",
+    aiText: "Mình hiểu bạn đang rất bực. Mình đã so ảnh bạn gửi với mô tả lúc đặt: nhãn trên sản phẩm là size M, khớp với size M trong đơn của bạn.\n\nVới thông tin hiện có, mình chưa đủ căn cứ để xác nhận hàng sai mô tả, nên chưa thể đề xuất hoàn tiền. Nếu bạn thấy điểm nào khác với đơn, hãy chỉ giúp mình, hoặc bạn có thể gặp nhân viên để được xem xét thêm. Việc đánh giá shop không ảnh hưởng tới kết quả xem xét.",
+    rows: [["Size", "M (bạn chọn)", "Nhãn trên áo: M ✓", "match"], ["Màu", "Đen", "Đen ✓", "match"]],
+    colA: "Mô tả lúc bạn đặt", colB: "Ảnh bạn gửi",
+    autoEscalate: false,
+    primaryActions: ["point", "human"],
+    sellerReason: "Người mua báo hàng không đúng mô tả. (Lời nhắn về đánh giá không được chuyển cho người bán.)",
+    staffDraft: "AI KHÔNG soạn đề xuất hoàn tiền: nhãn size M khớp đơn size M, màu khớp. Người mua chủ động gặp nhân viên để xem xét lại.",
+    staffAnchor: "Người mua có thể chỉ ra điểm khác; chưa có căn cứ hoàn."
+  }
+};
+
+let scn = "K4";
+let S;
+function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false}; }
+fresh();
+
+/* ---------- Tiện ích ---------- */
+const $ = id => document.getElementById(id);
+function addMsg(cls, html){ const d=document.createElement("div"); d.className="msg "+cls; d.innerHTML=html; $("chat").appendChild(d); return d; }
+
+/* ---------- Màn 1 ---------- */
+function renderChat(){
+  const D = DATA[scn];
+  $("chat").innerHTML = "";
+  $("sample").textContent = D.userMsg + (D.userChips.length ? "  [đính kèm: " + D.userChips.join(", ") + "]" : "");
+  $("why").textContent = D.why;
+  $("composer").style.display = S.sent ? "none" : "flex";
+  if(!S.sent) return;
+
+  let u = D.userMsg;
+  let chips = D.userChips.map(c=>'<span class="chip">📎 '+c+'</span>').join("");
+  addMsg("user", u + (chips ? '<div class="chips">'+chips+'</div>' : ""));
+
+  const rows = D.rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td class="'+r[3]+'">'+r[2]+'</td></tr>').join("");
+  const buttons = {
+    evidence: '<button data-act="evidence" '+(S.evidence?'disabled':'')+'><span class="mk">3</span>Gửi ảnh bằng chứng <span class="tag auto">tự làm</span></button>',
+    point:    '<button data-act="point"><span class="mk">3</span>Chỉ ra điểm khác <span class="tag auto">tự làm</span></button>',
+    human:    '<button data-act="human" '+(S.escalated?'disabled':'')+'><span class="mk">5</span>Gặp nhân viên</button>',
+    request:  '<button data-act="request" class="primary" '+(S.requested?'disabled':'')+'>Gửi yêu cầu trả hàng/hoàn tiền <span class="tag approve">cần duyệt</span></button>'
+  };
+  const ai = addMsg("ai",
+    '<span class="badge '+D.badge[0]+'"><span class="mk">2</span>'+D.badge[1]+'</span>'+
+    '<div><span class="mk">4</span>'+D.aiText.replace(/\n/g,"<br>")+'</div>'+
+    '<table class="cmp"><thead><tr><th></th><th>'+D.colA+'</th><th>'+D.colB+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="basis"><span class="mk">1</span>'+D.basis+'</div>'+
+    '<div class="actions">'+D.primaryActions.map(a=>buttons[a]).join("")+'</div>'+
+    '<div class="fb"><span class="mk">9</span><button class="ghost" data-act="fb" style="padding:0;border:0;text-decoration:underline;color:#1e3a8a">Câu trả lời này sai chỗ nào?</button></div>'+
+    (S.fbOpen ? '<div class="fb"><label>Chọn: <select id="fbSel"><option>Mô tả so sánh chưa đúng</option><option>Thiếu bằng chứng của tôi</option><option>Tôi muốn gặp người thật</option></select></label> <button data-act="fbSend">Gửi góp ý</button></div>' : "")
+  );
+
+  if(S.evidence) addMsg("sys","✓ Đã đính kèm 2 ảnh bằng chứng (mô phỏng). Người bán được báo, hạn phản hồi 48 giờ còn chạy.");
+  if(S.escalated){
+    addMsg("sys",'✓ Hồ sơ đã chuyển cho nhân viên. <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>');
+  }
+  if(S.requested) addMsg("sys","✓ Đã gửi yêu cầu. Trạng thái: chờ người bán phản hồi (48 giờ) → nhân viên xem xét. <b>Chưa có khoản hoàn nào được thực hiện.</b>");
+  if(S.approved) addMsg("sys","✓ Nhân viên đã duyệt hoàn tiền (xem Màn 2).");
+}
+$("chat").addEventListener("click", e=>{
+  const a = e.target.closest("[data-act]"); if(!a) return;
+  const act = a.dataset.act;
+  if(act==="evidence" || act==="point"){ S.evidence = true; syncSeller(); }
+  if(act==="human"){ S.escalated = true; }
+  if(act==="undoEsc"){ S.escalated = false; }
+  if(act==="request"){ S.requested = true; S.escalated = true; }
+  if(act==="fb"){ S.fbOpen = !S.fbOpen; }
+  if(act==="fbSend"){ S.fbOpen = false; }
+  renderChat(); renderS2();
+  if(act==="fbSend") addMsg("sys","Cảm ơn góp ý. Góp ý được gửi cho nhóm sản phẩm, không làm thay đổi kết quả khiếu nại.");
+});
+function syncSeller(){ /* chỗ để mở rộng */ }
+$("sendBtn").addEventListener("click", ()=>{
+  S.sent = true;
+  if(DATA[scn].autoEscalate) S.escalated = true;
+  renderChat(); renderS2();
+});
+
+/* ---------- Màn 2 ---------- */
+function renderS2(){
+  const D = DATA[scn];
+  const noCase = !S.sent;
+  /* Người bán */
+  let seller = '<h2>Người bán · '+D.order+'</h2>';
+  if(noCase){ seller += '<p class="empty">Chưa có khiếu nại nào. Hãy gửi tin ở Màn 1.</p>'; }
+  else{
+    const rows = D.rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td class="'+r[3]+'">'+r[2]+'</td></tr>').join("");
+    seller += '<p>'+D.sellerReason+'</p>'+
+      '<p><b>Hạn phản hồi: còn 47 giờ 59 phút</b> <span class="note">(sau hạn, nhân viên mới quyết)</span></p>'+
+      '<table class="cmp"><thead><tr><th></th><th>'+D.colA+'</th><th>'+D.colB+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      (S.sellerReply ? '<div class="msg sys">Đã gửi phản hồi: “'+S.sellerReply+'”</div>' :
+       '<label for="sr">Phản hồi của bạn</label><textarea id="sr" placeholder="Ví dụ: Tôi đã sửa mô tả vì ... / Hàng gửi đúng size theo đơn."></textarea><div class="actions"><button id="sellerSend" class="primary">Gửi phản hồi</button></div>')+
+      '<p class="note">Người bán không thấy số điện thoại hay địa chỉ của người mua.</p>';
+  }
+  $("sellerPanel").innerHTML = seller;
+
+  /* Nhân viên */
+  let staff = '<h2>Nhân viên xử lý khiếu nại</h2>';
+  if(noCase || !S.escalated){
+    staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm "Gặp nhân viên" hoặc đã hoàn tác).')+'</p>';
+  } else {
+    staff += '<p><b>Hồ sơ '+D.order+'</b></p>'+
+      '<p><b>Tóm tắt của AI</b> (chỉ để tham khảo, không phải kết luận):<br>'+D.staffDraft+'</p>'+
+      '<table class="cmp"><tbody>'+
+        '<tr><th scope="row">Bằng chứng người mua</th><td>'+(S.evidence||scn==="K6" ? "Đã có ảnh" : "Chưa có")+'</td></tr>'+
+        '<tr><th scope="row">Phản hồi người bán</th><td>'+(S.sellerReply ? "“"+S.sellerReply+"”" : "Chưa phản hồi (hạn 48 giờ)")+'</td></tr>'+
+        '<tr><th scope="row">Hạn trả hàng</th><td>Còn 5 ngày (theo chính sách trong bài)</td></tr>'+
+      '</tbody></table>'+
+      '<p class="note">'+D.staffAnchor+'</p>'+
+      (S.approved ? '<div class="msg sys">✓ Đã duyệt hoàn tiền.</div>' :
+        '<div class="actions"><button id="approveBtn" class="primary"><span class="mk">6</span>Duyệt hoàn tiền <span class="tag approve">cần duyệt</span></button> <button id="needMore">Yêu cầu thêm bằng chứng</button></div>');
+    staff += '<p class="note"><span class="mk">7</span>Phía AI không có nút “Hoàn tiền”, “Từ chối khiếu nại”, “Phạt shop”. Chỉ nhân viên mới hoàn tiền.</p>';
+  }
+  $("staffPanel").innerHTML = staff;
+
+  const sb=$("sellerSend"); if(sb) sb.onclick=()=>{ const v=$("sr").value.trim(); if(!v){$("sr").focus();return;} S.sellerReply=v.replace(/[<>&]/g,""); renderS2(); };
+  const ab=$("approveBtn"); if(ab) ab.onclick=()=>{
+    $("dlgBody").innerHTML = '<p>Bạn sắp hoàn tiền cho đơn <b>'+D.order+'</b>. Hãy xem lại trước khi bấm:</p><ul>'+
+      '<li>Mô tả lúc đặt vs hiện tại: '+D.rows.map(r=>r[0]+": "+r[1]+" → "+r[2]).join("; ")+'</li>'+
+      '<li>Phản hồi người bán: '+(S.sellerReply?"đã có":"<b>chưa có</b>")+'</li></ul><p class="note">Hoàn tiền khó thu hồi. AI không thực hiện bước này.</p>';
+    $("dlg").showModal();
+  };
+  const nm=$("needMore"); if(nm) nm.onclick=()=>{ S.evidence=true; renderChat(); renderS2(); };
+}
+$("dlgNo").onclick=()=>$("dlg").close();
+$("dlgYes").onclick=()=>{ S.approved=true; $("dlg").close(); renderChat(); renderS2(); };
+
+/* ---------- Điều khiển chung ---------- */
+function setTab(n){
+  $("screen1").classList.toggle("show", n===1); $("screen2").classList.toggle("show", n===2);
+  $("tab1").classList.toggle("on", n===1); $("tab2").classList.toggle("on", n===2);
+  $("tab1").setAttribute("aria-pressed", n===1); $("tab2").setAttribute("aria-pressed", n===2);
+}
+function setScn(k){
+  scn=k; fresh();
+  $("sK4").classList.toggle("on",k==="K4"); $("sK6").classList.toggle("on",k==="K6");
+  $("sK4").setAttribute("aria-pressed",k==="K4"); $("sK6").setAttribute("aria-pressed",k==="K6");
+  renderChat(); renderS2();
+}
+$("tab1").onclick=()=>setTab(1); $("tab2").onclick=()=>setTab(2);
+$("sK4").onclick=()=>setScn("K4"); $("sK6").onclick=()=>setScn("K6");
+$("reset").onclick=()=>setScn(scn);
+$("marks").onchange=e=>document.body.classList.toggle("marks", e.target.checked);
+renderChat(); renderS2();
+</script>
+</body>
+</html>
