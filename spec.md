@@ -171,7 +171,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 
 ## §5. Prototype
 
-- **Công cụ:** 1 file HTML duy nhất (`prototype/index.html`), chạy độc lập không cần cài đặt môi trường backend, dữ liệu giả lập chuẩn xác, không lưu cookie/tracker.
+- **Công cụ:** HTML + CSS + JavaScript thuần (`prototype/index.html`), kèm Three.js (đã đóng gói sẵn trong `prototype/scene.bundle.js`, mã nguồn `scene.src.js`) chỉ để làm nền 3D và cái cân trung lập ở header, không ảnh hưởng logic. Chạy offline bằng cách mở file, không cần backend, dữ liệu giả lập, không lưu cookie/tracker. Không có lời gọi AI thật; nếu trình duyệt không hỗ trợ WebGL thì phần 3D tự tắt và giao diện vẫn dùng bình thường.
 - **Đường dẫn truy cập:** [prototype/index.html](prototype/index.html) (mở trực tiếp bằng bất kỳ trình duyệt nào). Bộ ảnh chụp minh chứng có đánh số: `prototype/screen1-K4.png`, `prototype/screen2-K4.png`, `prototype/screen1-K6.png`.
 - **Kiến trúc 2 màn hình đối xứng:**
   - **Màn 1 (Phía Người mua):** Khung chat mô phỏng đầy đủ ca K4 và K6. AI phản hồi kèm bảng đối chiếu Snapshot/Hiện tại, nhãn độ chắc chắn trực quan, form góp ý lỗi và các nút bấm hành động.
