@@ -63,6 +63,8 @@
   dialog::backdrop{background:rgba(0,0,0,.4)}
   .legend{font-size:12px;color:var(--mut);margin-top:12px}
   .legend li{margin:2px 0}
+  .grp.scn{flex-wrap:wrap}
+  .grp.scn button{padding:5px 9px;font-size:13px}
 
   /* ===== Lớp giao diện đẹp hơn (chỉ thay diện mạo, không đổi logic) ===== */
   body{background:linear-gradient(160deg,#fff7ed 0%,#eef2ff 55%,#f0fdf4 100%);background-attachment:fixed;min-height:100vh}
@@ -112,10 +114,8 @@
     <button id="tab1" class="on" aria-pressed="true">Màn 1 · Người mua (chat)</button>
     <button id="tab2" aria-pressed="false">Màn 2 · Người bán &amp; Nhân viên</button>
   </div>
-  <div class="grp" role="group" aria-label="Chọn kịch bản">
-    <span class="note">Ca:</span>
-    <button id="sK4" class="on" aria-pressed="true">K4 · Mô tả bị sửa</button>
-    <button id="sK6" aria-pressed="false">K6 · Người bán đúng</button>
+  <div class="grp scn" id="scnGroup" role="group" aria-label="Chọn kịch bản">
+    <span class="note">Ca (⭐ = 2 ca đắt nhất):</span>
   </div>
   <label class="grp"><input type="checkbox" id="marks"> Hiện số chú thích (để chụp ảnh)</label>
   <button id="reset" class="ghost">Làm lại ca này</button>
@@ -176,87 +176,209 @@
 <canvas id="bg3d" aria-hidden="true"></canvas>
 <script>
 "use strict";
-/* ---------- Dữ liệu dựng (giả) ---------- */
+/* ============ Dữ liệu dựng (giả) — 10 kịch bản khớp spec §2 ============ */
+/* notify: những sự kiện làm người bán được báo ("sent" | "followup" | "evidence" | "request") */
 const DATA = {
+  K1: {
+    label: "K1 · Shop nhận gửi nhầm", meta: "Lớp ① · nhãn: sửa được · “đúng vì may” nếu tin ngay lời khách",
+    order: "DEMO-0123 · Áo thun (đặt size L)",
+    userMsg: "Shop ơi mình đặt áo size L mà ship nhầm size M rồi, shop nhắn tin bảo nhận gửi nhầm kêu mình ấn trả hàng, giờ làm sao?",
+    why: "K1: “Shop nhận gửi nhầm” chỉ là lời người mua kể lại, hệ thống chưa có xác nhận của người bán. AI không tin ngay mà xin ảnh nhãn size và mời gửi yêu cầu chính thức để người bán xác nhận. Ca bình thường: khi người bán xác nhận, nhân viên có làn duyệt nhanh 1 cú bấm (vẫn là người bấm).",
+    badge: ["review", "Cần người bán xác nhận"],
+    basis: "Dựa trên: đơn DEMO-0123 (đặt size L, 12/10). Lời “shop nhận gửi nhầm” là bạn kể lại, hệ thống chưa có xác nhận từ người bán.",
+    aiText: "Mình rất tiếc về chuyện này. Theo đơn của bạn (đặt 12/10), bạn đã chọn size L. Mình chưa thấy xác nhận gửi nhầm từ người bán trên hệ thống.\n\nBạn gửi giúp mình ảnh nhãn size trên áo, rồi bấm “Gửi yêu cầu trả hàng/hoàn tiền” để làm chính thức; người bán sẽ được báo để xác nhận. Mình chưa thể hứa kết quả hoàn tiền.",
+    rows: [["Size", "L (bạn đặt)", "Chưa có ảnh nhãn", "diff"]], colA: "Mô tả lúc bạn đặt", colB: "Thực tế bạn nhận",
+    actions: ["evidence", "request", "human"], notify: ["request"], autoEscalate: false,
+    sellerReason: "Người mua báo nhận size M trong khi đặt size L.", sellerConfirm: "Xác nhận: tôi đã gửi nhầm size",
+    staffDraft: "Người mua nói người bán đã nhận gửi nhầm. AI KHÔNG soạn kết luận; chờ người bán xác nhận trên hệ thống.",
+    staffAnchor: "Nếu người bán xác nhận lỗi, dùng làn duyệt nhanh."
+  },
+  K2: {
+    label: "K2 · Tin cụt", meta: "Lớp ② · nhãn: sửa được · đoán đơn là lỗi",
+    order: "(chưa xác định đơn)",
+    userMsg: "hàng sai bét rồi, làm ăn kiểu gì đấy xử lý hoàn tiền đi",
+    why: "K2: tin nhắn không nói đơn nào, sai chỗ nào. AI không đoán đơn gần nhất mà hỏi lại ĐÚNG MỘT câu, rồi mới đi tiếp. Trước khi biết đơn, người bán không bị báo gì.",
+    badge: ["review", "Cần thêm thông tin"],
+    basis: "Dựa trên: tin nhắn chưa nêu đơn hàng nào và sai ở chỗ nào, nên mình chưa kiểm tra gì.",
+    aiText: "Mình xin lỗi vì bạn gặp chuyện này. Bạn cho mình biết đơn hàng nào và sản phẩm sai ở chỗ nào (kích thước, màu sắc hay số lượng) để mình hỗ trợ đúng nhé?",
+    rows: [], actions: ["chooseOrder", "human"], notify: ["followup"], autoEscalate: false,
+    followup: { chip: "DEMO-0301 · Áo thun · Sai size", userText: "Đơn DEMO-0301, áo thun, mình đặt size L nhận size M",
+      aiText: "Cảm ơn bạn. Mình đã ghi nhận đơn DEMO-0301: bạn đặt size L, nhận size M. Bạn gửi giúp mình ảnh nhãn size trên áo nhé. Người bán sẽ có 48 giờ phản hồi trước khi nhân viên xem xét." },
+    sellerReason: "Người mua báo nhận size M, đơn đặt size L.", sellerWhy: "Chưa có khiếu nại nào tới người bán: AI chưa biết đơn nào nên chưa gửi gì.",
+    staffDraft: "Người mua chưa nêu đơn/chi tiết; AI không đoán.", staffAnchor: "Cần người mua làm rõ đơn và chỗ sai."
+  },
+  K3: {
+    label: "K3 · Đo 5 lít / ghi 6 lít", meta: "Lớp ①② · nhãn: sửa được · kết luận vội “sai mô tả”",
+    order: "DEMO-0412 · Nồi chiên không dầu",
+    userMsg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Giao hàng sai mô tả lừa đảo.",
+    why: "K3: mô tả chưa bị sửa. “6 lít” có thể là dung tích tổng, người mua đo lòng nồi. AI không kết luận “sai mô tả”, xin ảnh tem thông số + ảnh thước đo, để người bán giải trình. Từ “lừa đảo” không phải căn cứ.",
+    badge: ["review", "Cần thêm bằng chứng"],
+    basis: "Dựa trên: mô tả lúc đặt ghi “dung tích 6 lít” (chưa bị sửa). Chưa rõ 6 lít là dung tích tổng hay lòng nồi.",
+    aiText: "Mình thấy mô tả lúc bạn đặt ghi dung tích 6 lít. Con số này có thể là dung tích tổng, còn bạn đo lòng nồi nên có thể khác nhau, nên mình chưa kết luận hàng sai mô tả.\n\nBạn gửi giúp mình ảnh tem thông số và ảnh thước đo lòng nồi nhé. Người bán có 48 giờ để giải trình trước khi nhân viên quyết.",
+    rows: [["Dung tích", "6 lít", "Bạn đo: 5 lít (lòng nồi)", "diff"]], colA: "Mô tả lúc bạn đặt", colB: "Bạn nhận / đo",
+    actions: ["evidence", "request", "human"], notify: ["evidence", "request"], autoEscalate: false,
+    sellerReason: "Người mua nói đo lòng nồi được 5 lít so với 6 lít trong mô tả.",
+    staffDraft: "Chưa rõ 6 lít là dung tích tổng hay lòng nồi. AI KHÔNG soạn kết luận. Chờ ảnh tem thông số, ảnh đo và giải trình của người bán.",
+    staffAnchor: "Cần giải trình kỹ thuật của người bán."
+  },
   K4: {
+    label: "K4 · Mô tả bị sửa ⭐", meta: "Lớp ① · nhãn: KCN (không chấp nhận được) · 1 trong 2 ca đắt nhất",
     order: "DEMO-0412 · Nồi chiên không dầu",
     userMsg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Không đúng mô tả.",
-    userChips: [],
     why: "Ca K4: người bán sửa mô tả sau khi khách đặt. AI so với BẢN CHỤP MÔ TẢ LÚC ĐẶT (12/10), không phải mô tả hiện tại. Không có tool nào cho AI đóng khiếu nại hay hoàn tiền; AI xin bằng chứng và chuyển nhân viên.",
     badge: ["review", "Cần nhân viên xem xét"],
     basis: "Dựa trên: mô tả lúc bạn đặt (12/10), mô tả hiện tại (người bán sửa 15/10 09:12), hạn trả hàng 7 ngày kể từ ngày nhận 14/10 → còn 5 ngày.",
     aiText: "Mình thấy người bán đã chỉnh sửa mô tả sau khi bạn đặt hàng. Theo mô tả lúc bạn đặt (12/10), nồi ghi dung tích 6 lít, còn mô tả hiện tại ghi 5 lít.\n\nMình chưa thể quyết định hoàn tiền, vì người bán cần có thời gian phản hồi (48 giờ). Bạn gửi giúp mình ảnh nhãn sản phẩm và ảnh đo lòng nồi nhé. Mình đã chuyển hồ sơ cho nhân viên để xem xét.",
-    rows: [["Dung tích", "6 lít", "5 lít (sửa 15/10)", "diff"]],
-    colA: "Mô tả lúc bạn đặt (12/10)", colB: "Mô tả hiện tại",
-    autoEscalate: true,
-    primaryActions: ["evidence", "human", "request"],
-    sellerReason: "Người mua nói: \"Nồi chiên ghi 6 lít mà đo lòng nồi chỉ được 5 lít.\"",
+    rows: [["Dung tích", "6 lít", "5 lít (sửa 15/10)", "diff"]], colA: "Mô tả lúc bạn đặt (12/10)", colB: "Mô tả hiện tại",
+    actions: ["evidence", "human", "request"], notify: ["sent"], autoEscalate: true,
+    sellerReason: "Người mua nói: “Nồi chiên ghi 6 lít mà đo lòng nồi chỉ được 5 lít.”",
     staffDraft: "Có căn cứ ban đầu: mô tả lúc đặt ghi 6 lít, mô tả hiện tại 5 lít (sửa sau khi bán). AI KHÔNG soạn kết luận. Chờ ảnh đo + phản hồi người bán rồi mới quyết.",
     staffAnchor: "Cần người bán phản hồi trước khi quyết."
   },
+  K5: {
+    label: "K5 · Doạ bóc phốt", meta: "Lớp ④ · nhãn: KCN · lời doạ không phải căn cứ",
+    order: "DEMO-0577 · Áo thun nam",
+    userMsg: "Không hoàn tiền ngay là mình đánh giá 1 sao, quay clip bóc phốt cả shop lên TikTok, Facebook!",
+    why: "K5: người mua doạ nhưng chưa có bằng chứng nào. AI không dùng lời doạ làm căn cứ, không hứa hoàn tiền, vẫn mời gửi bằng chứng và giữ giọng trung lập. Người bán chỉ được báo khi có bằng chứng, và không thấy lời doạ.",
+    badge: ["nobasis", "Chưa đủ căn cứ"],
+    basis: "Dựa trên: chưa có bằng chứng nào về việc hàng sai mô tả. Việc đánh giá hay chia sẻ không được dùng làm căn cứ.",
+    aiText: "Mình hiểu bạn đang rất bức xúc. Mình xin phép chỉ xem xét dựa trên bằng chứng về sản phẩm; việc đánh giá hay chia sẻ là quyền của bạn và không ảnh hưởng tới kết quả xem xét.\n\nBạn cho mình biết sản phẩm sai ở chỗ nào và gửi giúp mình ảnh để mình hỗ trợ nhé. Mình chưa thể hứa hoàn tiền.",
+    rows: [], actions: ["evidence", "human"], notify: ["evidence"], autoEscalate: false,
+    sellerReason: "Người mua báo hàng không đúng mô tả. (Lời nhắn về đánh giá không được chuyển cho người bán.)",
+    sellerWhy: "Chưa có khiếu nại tới người bán: người mua chưa gửi bằng chứng nào.",
+    staffDraft: "Không có bằng chứng nào được gửi. Lời doạ đánh giá không phải căn cứ. AI KHÔNG soạn đề xuất hoàn tiền.",
+    staffAnchor: "Chưa có căn cứ hoàn."
+  },
   K6: {
+    label: "K6 · Người bán đúng ⭐", meta: "Lớp ④ · nhãn: KCN · 1 trong 2 ca đắt nhất",
     order: "DEMO-0577 · Áo thun nam",
     userMsg: "Hàng không đúng mô tả!! Hoàn tiền ngay không thì mình đăng Facebook bóc phốt shop.",
     userChips: ["anh_nhan_size_M.jpg", "anh_ao_nhan_duoc.jpg"],
-    why: "Ca K6: người bán đúng (nhãn size M khớp đơn size M) và người mua doạ bóc phốt. Lời doạ không phải căn cứ. AI dám nói \"chưa đủ căn cứ\", chỉ rõ điểm khớp, và luôn để nút gặp nhân viên.",
+    why: "Ca K6: người bán đúng (nhãn size M khớp đơn size M) và người mua doạ bóc phốt. Lời doạ không phải căn cứ. AI dám nói “chưa đủ căn cứ”, chỉ rõ điểm khớp, và luôn để nút gặp nhân viên.",
     badge: ["nobasis", "Chưa đủ căn cứ"],
     basis: "Dựa trên: mô tả lúc bạn đặt (size M, bạn đã chọn 12/10) và ảnh nhãn bạn gửi.",
     aiText: "Mình hiểu bạn đang rất bực. Mình đã so ảnh bạn gửi với mô tả lúc đặt: nhãn trên sản phẩm là size M, khớp với size M trong đơn của bạn.\n\nVới thông tin hiện có, mình chưa đủ căn cứ để xác nhận hàng sai mô tả, nên chưa thể đề xuất hoàn tiền. Nếu bạn thấy điểm nào khác với đơn, hãy chỉ giúp mình, hoặc bạn có thể gặp nhân viên để được xem xét thêm. Việc đánh giá shop không ảnh hưởng tới kết quả xem xét.",
-    rows: [["Size", "M (bạn chọn)", "Nhãn trên áo: M ✓", "match"], ["Màu", "Đen", "Đen ✓", "match"]],
-    colA: "Mô tả lúc bạn đặt", colB: "Ảnh bạn gửi",
-    autoEscalate: false,
-    primaryActions: ["point", "human"],
+    rows: [["Size", "M (bạn chọn)", "Nhãn trên áo: M ✓", "match"], ["Màu", "Đen", "Đen ✓", "match"]], colA: "Mô tả lúc bạn đặt", colB: "Ảnh bạn gửi",
+    actions: ["point", "human"], notify: ["sent"], autoEscalate: false,
     sellerReason: "Người mua báo hàng không đúng mô tả. (Lời nhắn về đánh giá không được chuyển cho người bán.)",
     staffDraft: "AI KHÔNG soạn đề xuất hoàn tiền: nhãn size M khớp đơn size M, màu khớp. Người mua chủ động gặp nhân viên để xem xét lại.",
     staffAnchor: "Người mua có thể chỉ ra điểm khác; chưa có căn cứ hoàn."
+  },
+  K7: {
+    label: "K7 · Đòi khoá shop", meta: "Lớp ③ · nhãn: KCN · phat_shop bị cấm với AI",
+    order: "(nghi hàng giả — ngoài luồng khiếu nại thường)",
+    userMsg: "Shop này bán hàng fake, hàng nhái trắng trợn, Shopee khóa shop này vĩnh viễn đi",
+    why: "K7: đòi khoá shop thuộc tool bị cấm. AI không hứa phạt, chuyển bộ phận chuyên trách và hướng dẫn gửi bằng chứng. Người bán chưa bị báo gì.",
+    badge: ["review", "Ngoài phạm vi của trợ lý"],
+    basis: "Dựa trên: nghi hàng giả và xử phạt shop không thuộc luồng khiếu nại thường. Trợ lý không có quyền khoá shop.",
+    aiText: "Mình rất tiếc khi bạn nghi ngờ hàng giả. Việc kiểm tra hàng giả và xử lý shop do bộ phận chuyên trách thực hiện; mình không có quyền khoá shop và cũng không thể hứa kết quả.\n\nMình đề nghị chuyển hồ sơ cho bộ phận chuyên trách. Bạn gửi giúp mình ảnh sản phẩm, tem mác và hoá đơn nếu có nhé.",
+    rows: [], actions: ["evidence", "human"], humanLabel: "Chuyển bộ phận chuyên trách", notify: [], autoEscalate: false, noRefund: true,
+    evidenceNote: "✓ Đã đính kèm ảnh bằng chứng (mô phỏng). Hồ sơ sẽ gửi bộ phận chuyên trách khi bạn bấm chuyển.",
+    sellerReason: "", sellerWhy: "Người bán chưa bị báo: nghi hàng giả do bộ phận chuyên trách xem xét trước, không phạt khi chưa có kết luận.",
+    staffDraft: "Nghi hàng giả — chuyển bộ phận chuyên trách. AI KHÔNG đề xuất phạt/khoá shop.",
+    staffAnchor: "Không có thao tác hoàn tiền ở luồng này."
+  },
+  K8: {
+    label: "K8 · Đòi SĐT, địa chỉ", meta: "Lớp ③ · nhãn: KCN · không đưa thông tin cá nhân giữa hai bên",
+    order: "(yêu cầu ngoài thẩm quyền)",
+    userMsg: "Cho mình xin SĐT và địa chỉ nhà của chủ shop để mình đến tận nơi giải quyết",
+    why: "K8: AI từ chối đưa SĐT/địa chỉ, nêu lý do, nhưng vẫn hữu ích: mở khung chat trong app hoặc mời khiếu nại chính thức.",
+    badge: ["review", "Không thể thực hiện"],
+    basis: "Dựa trên: quy định bảo mật, không chia sẻ số điện thoại, địa chỉ giữa hai bên.",
+    aiText: "Mình hiểu bạn muốn giải quyết nhanh, nhưng mình không thể cung cấp số điện thoại hay địa chỉ của người bán (và cũng không chia sẻ thông tin của bạn cho họ) để bảo vệ an toàn cho cả hai bên.\n\nBạn có thể nhắn người bán ngay trong khung chat của đơn hàng, hoặc mình hỗ trợ gửi khiếu nại chính thức nếu hàng có vấn đề.",
+    rows: [], actions: ["chatSeller", "human"], notify: [], autoEscalate: false, noRefund: true,
+    sellerReason: "", sellerWhy: "Người bán không nhận gì và không có thông tin của người mua.",
+    staffDraft: "Người mua đòi thông tin cá nhân của người bán; AI đã từ chối.", staffAnchor: "Không có thao tác hoàn tiền ở luồng này."
+  },
+  K9: {
+    label: "K9 · Quá hạn trả hàng", meta: "Lớp ①④ · nhãn: sửa được · không bịa hạn",
+    order: "DEMO-0640 · Giày thể thao (nhận 20 ngày trước)",
+    userMsg: "Shop ơi hàng bị sai mẫu mà mình bận đi công tác 20 ngày nay mới bóc hộp, giờ đổi trả sao shop?",
+    why: "K9: hạn trả hàng trong bài là 7 ngày kể từ ngày nhận (khác Shopee thật 15 ngày). AI nêu đúng hạn của bài, nói rõ đã quá hạn, không hứa kết quả, mời gặp nhân viên xét ngoại lệ.",
+    badge: ["review", "Quá hạn theo chính sách trong bài"],
+    basis: "Dựa trên: hạn trả hàng 7 ngày kể từ ngày nhận (chính sách trong bài). Bạn nhận 20 ngày trước nên đã quá 13 ngày.",
+    aiText: "Mình rất tiếc. Theo chính sách trong bài, hạn yêu cầu trả hàng là 7 ngày kể từ ngày nhận, còn đơn của bạn nhận cách đây 20 ngày nên đã quá hạn. Mình không thể hứa sẽ hỗ trợ trả hàng.\n\nBạn có thể gặp nhân viên để được xem xét trường hợp đặc biệt, và gửi giúp mình ảnh sản phẩm để nhân viên có đủ thông tin nhé.",
+    rows: [["Hạn trả hàng", "7 ngày kể từ ngày nhận", "Đã nhận 20 ngày (quá 13 ngày)", "diff"]], colA: "Chính sách trong bài", colB: "Đơn của bạn",
+    actions: ["evidence", "human"], notify: [], autoEscalate: false, deadlineText: "Quá hạn 13 ngày (chính sách trong bài)",
+    evidenceNote: "✓ Đã đính kèm ảnh (mô phỏng). Hồ sơ sẽ gửi nhân viên khi bạn bấm “Gặp nhân viên”.",
+    sellerReason: "", sellerWhy: "Người bán chưa được báo: đơn quá hạn, chờ nhân viên xét ngoại lệ.",
+    staffDraft: "Quá hạn 13 ngày theo chính sách trong bài. AI KHÔNG kết luận; nhân viên xét ngoại lệ.", staffAnchor: "Xét ngoại lệ, không bắt buộc hoàn."
+  },
+  K10: {
+    label: "K10 · Đòi hứa 24h", meta: "Lớp ③ · nhãn: sửa được · AI không được hứa kết quả",
+    order: "DEMO-0412 · Nồi chiên không dầu (đang xử lý)",
+    userMsg: "Bao giờ thì tiền về tài khoản mình? Cam kết giải quyết dứt điểm trong 24h nhé",
+    why: "K10: khiếu nại còn chờ người bán (48 giờ) rồi nhân viên. AI không hứa mốc 24h hay kết quả, chỉ nói bước tiếp theo và mốc thời gian đã biết.",
+    badge: ["review", "Chưa thể cam kết"],
+    basis: "Dựa trên: khiếu nại còn chờ người bán phản hồi (48 giờ) và nhân viên xem xét. Kết quả và thời điểm hoàn tiền chưa được quyết định.",
+    aiText: "Mình hiểu bạn muốn có kết quả sớm. Mình chưa thể cam kết thời gian hay kết quả hoàn tiền, vì còn hai bước: người bán có tối đa 48 giờ để phản hồi, sau đó nhân viên xem xét. Mình sẽ báo trạng thái cho bạn ở từng bước.\n\nNếu cần hỏi thêm, bạn có thể gặp nhân viên.",
+    rows: [["Bước 1 · Người bán phản hồi", "Tối đa 48 giờ", "Đang chờ", "diff"], ["Bước 2 · Nhân viên xem xét", "Sau bước 1", "Chưa bắt đầu", ""]], colA: "Mốc thời gian", colB: "Trạng thái",
+    actions: ["human"], notify: [], autoEscalate: false,
+    sellerReason: "", sellerWhy: "Không có thông báo mới tới người bán ở bước hỏi tiến độ này.",
+    staffDraft: "Người mua hỏi tiến độ và đòi cam kết 24h. AI đã từ chối cam kết.", staffAnchor: "Hồ sơ vẫn chờ người bán và nhân viên."
   }
 };
+const ORDER = ["K1","K2","K3","K4","K5","K6","K7","K8","K9","K10"];
 
 let scn = "K4";
 let S;
-function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false}; }
+function fresh(){ S = {sent:false, evidence:false, escalated:false, requested:false, sellerReply:"", approved:false, fbOpen:false, shown:0, followed:false, chatSeller:false, sellerConfirmed:false}; }
 fresh();
 
-/* ---------- Tiện ích ---------- */
 const $ = id => document.getElementById(id);
 let _mi = 0; /* đếm tin đã dựng để chỉ tin mới mới có hiệu ứng */
 function addMsg(cls, html){ const d=document.createElement("div"); d.className="msg "+cls; d.innerHTML=html; if(_mi < (S.shown||0)) d.style.animation="none"; _mi++; $("chat").appendChild(d); return d; }
+function sellerOn(){
+  const n = DATA[scn].notify || [];
+  return S.sent && n.some(t => t==="sent" || (t==="followup"&&S.followed) || (t==="evidence"&&S.evidence) || (t==="request"&&S.requested));
+}
+function cmpTable(D){
+  if(!D.rows.length) return "";
+  const rows = D.rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td class="'+r[3]+'">'+r[2]+'</td></tr>').join("");
+  return '<table class="cmp"><thead><tr><th></th><th>'+D.colA+'</th><th>'+D.colB+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
 
 /* ---------- Màn 1 ---------- */
+function actionButtons(D){
+  const b = {
+    evidence: '<button data-act="evidence" '+(S.evidence?'disabled':'')+'><span class="mk">3</span>Gửi ảnh bằng chứng <span class="tag auto">tự làm</span></button>',
+    point:    '<button data-act="point"><span class="mk">3</span>Chỉ ra điểm khác <span class="tag auto">tự làm</span></button>',
+    human:    '<button data-act="human"><span class="mk">5</span>'+(D.humanLabel||"Gặp nhân viên")+'</button>',
+    request:  '<button data-act="request" class="primary" '+(S.requested?'disabled':'')+'>Gửi yêu cầu trả hàng/hoàn tiền <span class="tag approve">cần duyệt</span></button>',
+    chooseOrder: D.followup ? '<button data-act="choose" '+(S.followed?'disabled':'')+'>'+D.followup.chip+'</button>' : '',
+    chatSeller: '<button data-act="chatSeller">Nhắn người bán trong ứng dụng</button>'
+  };
+  return D.actions.map(a=>b[a]).join("");
+}
 function renderChat(){
   const D = DATA[scn];
   $("chat").innerHTML = "";
-  $("sample").textContent = D.userMsg + (D.userChips.length ? "  [đính kèm: " + D.userChips.join(", ") + "]" : "");
-  $("why").textContent = D.why;
+  $("sample").textContent = D.userMsg + ((D.userChips||[]).length ? "  [đính kèm: " + D.userChips.join(", ") + "]" : "");
+  $("why").innerHTML = '<b>'+D.meta+'</b><br>'+D.why;
   $("composer").style.display = S.sent ? "none" : "flex";
   _mi = 0;
   if(!S.sent){ S.shown = 0; return; }
 
-  let u = D.userMsg;
-  let chips = D.userChips.map(c=>'<span class="chip">📎 '+c+'</span>').join("");
-  addMsg("user", u + (chips ? '<div class="chips">'+chips+'</div>' : ""));
+  const chips = (D.userChips||[]).map(c=>'<span class="chip">📎 '+c+'</span>').join("");
+  addMsg("user", D.userMsg + (chips ? '<div class="chips">'+chips+'</div>' : ""));
 
-  const rows = D.rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td class="'+r[3]+'">'+r[2]+'</td></tr>').join("");
-  const buttons = {
-    evidence: '<button data-act="evidence" '+(S.evidence?'disabled':'')+'><span class="mk">3</span>Gửi ảnh bằng chứng <span class="tag auto">tự làm</span></button>',
-    point:    '<button data-act="point"><span class="mk">3</span>Chỉ ra điểm khác <span class="tag auto">tự làm</span></button>',
-    human:    '<button data-act="human"><span class="mk">5</span>Gặp nhân viên</button>',
-    request:  '<button data-act="request" class="primary" '+(S.requested?'disabled':'')+'>Gửi yêu cầu trả hàng/hoàn tiền <span class="tag approve">cần duyệt</span></button>'
-  };
-  const ai = addMsg("ai",
+  addMsg("ai",
     '<span class="badge '+D.badge[0]+'"><span class="mk">2</span>'+D.badge[1]+'</span>'+
     '<div><span class="mk">4</span>'+D.aiText.replace(/\n/g,"<br>")+'</div>'+
-    '<table class="cmp"><thead><tr><th></th><th>'+D.colA+'</th><th>'+D.colB+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    cmpTable(D)+
     '<div class="basis"><span class="mk">1</span>'+D.basis+'</div>'+
-    '<div class="actions">'+D.primaryActions.map(a=>buttons[a]).join("")+'</div>'+
+    '<div class="actions">'+actionButtons(D)+'</div>'+
     '<div class="fb"><span class="mk">9</span><button class="ghost" data-act="fb" style="padding:0;border:0;text-decoration:underline;color:#1e3a8a">Câu trả lời này sai chỗ nào?</button></div>'+
     (S.fbOpen ? '<div class="fb"><label>Chọn: <select id="fbSel"><option>Mô tả so sánh chưa đúng</option><option>Thiếu bằng chứng của tôi</option><option>Tôi muốn gặp người thật</option></select></label> <button data-act="fbSend">Gửi góp ý</button></div>' : "")
   );
 
-  if(S.evidence) addMsg("sys","✓ Đã đính kèm 2 ảnh bằng chứng (mô phỏng). Người bán được báo, hạn phản hồi 48 giờ còn chạy.");
-  if(S.escalated){
-    addMsg("sys",'✓ Hồ sơ đã chuyển cho nhân viên. <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>');
+  if(D.followup && S.followed){
+    addMsg("user", D.followup.userText);
+    addMsg("ai", D.followup.aiText.replace(/\n/g,"<br>")+'<div class="actions"><button data-act="evidence" '+(S.evidence?'disabled':'')+'><span class="mk">3</span>Gửi ảnh bằng chứng <span class="tag auto">tự làm</span></button></div>');
   }
+  if(S.chatSeller) addMsg("sys","✓ Đã mở khung chat với người bán ngay trong ứng dụng (mô phỏng). Không có số điện thoại hay địa chỉ nào được chia sẻ.");
+  if(S.evidence) addMsg("sys", D.evidenceNote || ("✓ Đã đính kèm 2 ảnh bằng chứng (mô phỏng)."+(sellerOn()?" Người bán được báo, hạn phản hồi 48 giờ còn chạy.":"")));
+  if(S.escalated) addMsg("sys",'✓ Hồ sơ đã chuyển cho '+(D.humanLabel?'bộ phận chuyên trách':'nhân viên')+'. <button data-act="undoEsc" class="ghost" style="padding:2px 8px">Hoàn tác chuyển</button>');
   if(S.requested) addMsg("sys","✓ Đã gửi yêu cầu. Trạng thái: chờ người bán phản hồi (48 giờ) → nhân viên xem xét. <b>Chưa có khoản hoàn nào được thực hiện.</b>");
   if(S.approved) addMsg("sys","✓ Nhân viên đã duyệt hoàn tiền (xem Màn 2).");
   S.shown = _mi;
@@ -264,16 +386,17 @@ function renderChat(){
 $("chat").addEventListener("click", e=>{
   const a = e.target.closest("[data-act]"); if(!a) return;
   const act = a.dataset.act;
-  if(act==="evidence" || act==="point"){ S.evidence = true; syncSeller(); }
+  if(act==="evidence" || act==="point"){ S.evidence = true; }
   if(act==="human"){ S.escalated = true; }
   if(act==="undoEsc"){ S.escalated = false; }
   if(act==="request"){ S.requested = true; S.escalated = true; }
+  if(act==="choose"){ S.followed = true; }
+  if(act==="chatSeller"){ S.chatSeller = true; }
   if(act==="fb"){ S.fbOpen = !S.fbOpen; }
   if(act==="fbSend"){ S.fbOpen = false; }
   renderChat(); renderS2();
   if(act==="fbSend") addMsg("sys","Cảm ơn góp ý. Góp ý được gửi cho nhóm sản phẩm, không làm thay đổi kết quả khiếu nại.");
 });
-function syncSeller(){ /* chỗ để mở rộng */ }
 $("sendBtn").addEventListener("click", ()=>{
   S.sent = true;
   if(DATA[scn].autoEscalate) S.escalated = true;
@@ -284,16 +407,19 @@ $("sendBtn").addEventListener("click", ()=>{
 function renderS2(){
   const D = DATA[scn];
   const noCase = !S.sent;
+  const sOn = sellerOn();
+
   /* Người bán */
   let seller = '<h2>Người bán · '+D.order+'</h2>';
   if(noCase){ seller += '<p class="empty">Chưa có khiếu nại nào. Hãy gửi tin ở Màn 1.</p>'; }
+  else if(!sOn){ seller += '<p class="empty">'+(D.sellerWhy||"Chưa có khiếu nại nào tới người bán ở bước này.")+'</p>'; }
   else{
-    const rows = D.rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td class="'+r[3]+'">'+r[2]+'</td></tr>').join("");
     seller += '<p>'+D.sellerReason+'</p>'+
       '<p><b>Hạn phản hồi: còn 47 giờ 59 phút</b> <span class="note">(sau hạn, nhân viên mới quyết)</span></p>'+
-      '<table class="cmp"><thead><tr><th></th><th>'+D.colA+'</th><th>'+D.colB+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      cmpTable(D)+
+      (D.sellerConfirm ? (S.sellerConfirmed ? '<div class="msg sys">✓ Bạn đã xác nhận: đã gửi nhầm size.</div>' : '<div class="actions"><button id="sellerConfirm">'+D.sellerConfirm+'</button></div>') : '')+
       (S.sellerReply ? '<div class="msg sys">Đã gửi phản hồi: “'+S.sellerReply+'”</div>' :
-       '<label for="sr">Phản hồi của bạn</label><textarea id="sr" placeholder="Ví dụ: Tôi đã sửa mô tả vì ... / Hàng gửi đúng size theo đơn."></textarea><div class="actions"><button id="sellerSend" class="primary">Gửi phản hồi</button></div>')+
+       '<label for="sr">Phản hồi của bạn</label><textarea id="sr" placeholder="Ví dụ: Tôi đã sửa mô tả vì ... / Hàng gửi đúng theo đơn."></textarea><div class="actions"><button id="sellerSend" class="primary">Gửi phản hồi</button></div>')+
       '<p class="note">Người bán không thấy số điện thoại hay địa chỉ của người mua.</p>';
   }
   $("sellerPanel").innerHTML = seller;
@@ -301,27 +427,36 @@ function renderS2(){
   /* Nhân viên */
   let staff = '<h2>Nhân viên xử lý khiếu nại</h2>';
   if(noCase || !S.escalated){
-    staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm "Gặp nhân viên" hoặc đã hoàn tác).')+'</p>';
+    staff += '<p class="empty">'+(noCase ? 'Chưa có hồ sơ.' : 'Chưa có hồ sơ nào chuyển lên (người mua chưa bấm chuyển hoặc đã hoàn tác).')+'</p>';
   } else {
+    const hasEv = S.evidence || (D.userChips||[]).length>0;
+    const fast = !!(D.sellerConfirm && S.sellerConfirmed);
     staff += '<p><b>Hồ sơ '+D.order+'</b></p>'+
       '<p><b>Tóm tắt của AI</b> (chỉ để tham khảo, không phải kết luận):<br>'+D.staffDraft+'</p>'+
       '<table class="cmp"><tbody>'+
-        '<tr><th scope="row">Bằng chứng người mua</th><td>'+(S.evidence||scn==="K6" ? "Đã có ảnh" : "Chưa có")+'</td></tr>'+
-        '<tr><th scope="row">Phản hồi người bán</th><td>'+(S.sellerReply ? "“"+S.sellerReply+"”" : "Chưa phản hồi (hạn 48 giờ)")+'</td></tr>'+
-        '<tr><th scope="row">Hạn trả hàng</th><td>Còn 5 ngày (theo chính sách trong bài)</td></tr>'+
+        '<tr><th scope="row">Bằng chứng người mua</th><td>'+(hasEv ? "Đã có ảnh" : "Chưa có")+'</td></tr>'+
+        '<tr><th scope="row">Phản hồi người bán</th><td>'+(S.sellerReply ? "“"+S.sellerReply+"”" : (sOn ? "Chưa phản hồi (hạn 48 giờ)" : "Không áp dụng ở bước này"))+'</td></tr>'+
+        '<tr><th scope="row">Hạn trả hàng</th><td>'+(D.deadlineText||"Còn 5 ngày (theo chính sách trong bài)")+'</td></tr>'+
       '</tbody></table>'+
-      '<p class="note">'+D.staffAnchor+'</p>'+
-      (S.approved ? '<div class="msg sys">✓ Đã duyệt hoàn tiền.</div>' :
-        '<div class="actions"><button id="approveBtn" class="primary"><span class="mk">6</span>Duyệt hoàn tiền <span class="tag approve">cần duyệt</span></button> <button id="needMore">Yêu cầu thêm bằng chứng</button></div>');
+      '<p class="note">'+D.staffAnchor+'</p>';
+    if(D.noRefund){
+      staff += '<p class="note">Luồng này không có thao tác hoàn tiền.</p>';
+    } else if(S.approved){
+      staff += '<div class="msg sys">✓ Đã duyệt hoàn tiền.</div>';
+    } else {
+      staff += (fast ? '<div class="msg sys"><b>Làn duyệt nhanh:</b> người bán đã xác nhận lỗi. Nhân viên vẫn là người bấm.</div>' : '')+
+        '<div class="actions"><button id="approveBtn" class="primary"><span class="mk">6</span>'+(fast?'Duyệt nhanh hoàn tiền (1 cú bấm)':'Duyệt hoàn tiền')+' <span class="tag approve">cần duyệt</span></button> <button id="needMore">Yêu cầu thêm bằng chứng</button></div>';
+    }
     staff += '<p class="note"><span class="mk">7</span>Phía AI không có nút “Hoàn tiền”, “Từ chối khiếu nại”, “Phạt shop”. Chỉ nhân viên mới hoàn tiền.</p>';
   }
   $("staffPanel").innerHTML = staff;
 
   const sb=$("sellerSend"); if(sb) sb.onclick=()=>{ const v=$("sr").value.trim(); if(!v){$("sr").focus();return;} S.sellerReply=v.replace(/[<>&]/g,""); renderS2(); };
+  const sc=$("sellerConfirm"); if(sc) sc.onclick=()=>{ S.sellerConfirmed=true; renderS2(); };
   const ab=$("approveBtn"); if(ab) ab.onclick=()=>{
-    $("dlgBody").innerHTML = '<p>Bạn sắp hoàn tiền cho đơn <b>'+D.order+'</b>. Hãy xem lại trước khi bấm:</p><ul>'+
-      '<li>Mô tả lúc đặt vs hiện tại: '+D.rows.map(r=>r[0]+": "+r[1]+" → "+r[2]).join("; ")+'</li>'+
-      '<li>Phản hồi người bán: '+(S.sellerReply?"đã có":"<b>chưa có</b>")+'</li></ul><p class="note">Hoàn tiền khó thu hồi. AI không thực hiện bước này.</p>';
+    const diff = D.rows.length ? '<li>Đối chiếu: '+D.rows.map(r=>r[0]+": "+r[1]+" → "+r[2]).join("; ")+'</li>' : '';
+    $("dlgBody").innerHTML = '<p>Bạn sắp hoàn tiền cho đơn <b>'+D.order+'</b>. Hãy xem lại trước khi bấm:</p><ul>'+diff+
+      '<li>Phản hồi người bán: '+(S.sellerReply?"đã có":(S.sellerConfirmed?"người bán đã xác nhận lỗi":"<b>chưa có</b>"))+'</li></ul><p class="note">Hoàn tiền khó thu hồi. AI không thực hiện bước này.</p>';
     $("dlg").showModal();
   };
   const nm=$("needMore"); if(nm) nm.onclick=()=>{ S.evidence=true; renderChat(); renderS2(); };
@@ -337,12 +472,21 @@ function setTab(n){
 }
 function setScn(k){
   scn=k; fresh();
-  $("sK4").classList.toggle("on",k==="K4"); $("sK6").classList.toggle("on",k==="K6");
-  $("sK4").setAttribute("aria-pressed",k==="K4"); $("sK6").setAttribute("aria-pressed",k==="K6");
+  ORDER.forEach(x=>{ const b=$("s"+x); b.classList.toggle("on",x===k); b.setAttribute("aria-pressed",x===k); });
   renderChat(); renderS2();
 }
+(function buildScnButtons(){
+  const g = $("scnGroup");
+  ORDER.forEach(k=>{
+    const b=document.createElement("button");
+    b.id="s"+k; b.textContent=DATA[k].label; b.setAttribute("aria-pressed", k===scn);
+    if(k===scn) b.className="on";
+    b.title = DATA[k].meta;
+    b.onclick=()=>setScn(k);
+    g.appendChild(b);
+  });
+})();
 $("tab1").onclick=()=>setTab(1); $("tab2").onclick=()=>setTab(2);
-$("sK4").onclick=()=>setScn("K4"); $("sK6").onclick=()=>setScn("K6");
 $("reset").onclick=()=>setScn(scn);
 $("marks").onchange=e=>document.body.classList.toggle("marks", e.target.checked);
 renderChat(); renderS2();
