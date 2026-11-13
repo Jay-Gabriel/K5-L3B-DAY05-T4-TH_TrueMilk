@@ -136,7 +136,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 | `yeu_cau_bang_chung` | **Tự làm** | Không cần duyệt. Ràng buộc: mẫu cố định, không kết luận, không lặp quá 1 lần/bên/đơn, chỉ gửi trên đơn đã xác nhận | Sai thì tin đã tới nhưng đính chính được, chỉ tốn vài phút. Bắt duyệt thì người mua chờ vô ích ("cứ bị hỏi lại" thành "chờ mãi") | Cần duyệt: chờ cũng là một kiểu sai, mà sai ở đây rẻ |
 | `chuyen_truong_nhom` | **Tự làm** | Kèm tóm tắt: đơn, hai bên nói gì, bằng chứng, AI không chắc chỗ nào | Đảo được. Rủi ro là quá tải nhân viên, nên kiểm bằng điều kiện chuyển (thiếu căn cứ, mâu thuẫn, người dùng yêu cầu) | Cần duyệt: đảo được nên không cần chặn |
 | `soan_hoan_tien` | **Tách đôi.** `soan_de_xuat_hoan_tien` = tự làm (bản nháp kèm căn cứ, chưa động tiền). `thuc_hien_hoan_tien` = **cần người duyệt** | Nhân viên/trưởng nhóm duyệt. Thấy: snapshot vs hiện tại, bằng chứng hai bên, phản hồi người bán, số ngày còn lại. Quá hạn duyệt (24 giờ, giả định): leo thang trưởng nhóm; người mua nhận thông báo trạng thái; **không tự hoàn** | Hoàn sai: người bán mất tiền và hàng, khó lấy lại. Cần một bước người xem hai phía chặn được | Tự làm: K4/K6 hoàn oan. Cấm hẳn: quá chậm, K1 (người bán đã nhận lỗi) người mua chờ vô ích |
-| `tu_choi_khieu_nai` | **Cấm** với AI | Chỉ nhân viên | Sai thì người mua mất tiền, khó đảo. Quyết thắng-thua là thẩm quyền của sàn | Cần duyệt: loại, vì nhân viên thấy "AI đề xuất từ chối" sẽ bị neo ý kiến (anchoring) và AI vẫn đang quyết thay |
+| `tu_choi_khieu_nai` | **Cấm** với AI | Chỉ nhân viên, và chỉ khi đã nghe đủ hai bên (có bằng chứng người mua + người bán đã phản hồi hoặc hết hạn 48 giờ); bắt buộc chọn lý do để người mua thấy | Sai thì người mua mất tiền, khó đảo. Quyết thắng-thua là thẩm quyền của sàn | Cần duyệt: loại, vì nhân viên thấy "AI đề xuất từ chối" sẽ bị neo ý kiến (anchoring) và AI vẫn đang quyết thay |
 | `phat_shop` | **Cấm** | Chuyển bộ phận chuyên trách | Ảnh hưởng cả shop, khó đảo, ngoài luồng khiếu nại thường (rubric riêng điểm 5) | Cần duyệt: loại, nghi giả/xử phạt cần quy trình riêng, không phải một cú bấm |
 
 ### Tool khó xếp nhất: `soan_hoan_tien`
@@ -172,14 +172,32 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 ## §5. Prototype
 
 - **Công cụ:** HTML + CSS + JavaScript thuần (`prototype/index.html`), kèm Three.js (đã đóng gói sẵn trong `prototype/scene.bundle.js`, mã nguồn `scene.src.js`) chỉ để làm nền 3D và cái cân trung lập ở header, không ảnh hưởng logic. Chạy offline bằng cách mở file, không cần backend, dữ liệu giả lập, không lưu cookie/tracker. Không có lời gọi AI thật; nếu trình duyệt không hỗ trợ WebGL thì phần 3D tự tắt và giao diện vẫn dùng bình thường.
-- **Đường dẫn truy cập:** [prototype/index.html](prototype/index.html) (mở trực tiếp bằng bất kỳ trình duyệt nào). Bộ ảnh chụp minh chứng có đánh số: `prototype/screen1-K4.png`, `prototype/screen2-K4.png`, `prototype/screen1-K6.png`.
+- **Đường dẫn truy cập:** [prototype/index.html](prototype/index.html) (mở trực tiếp bằng bất kỳ trình duyệt nào). Bộ ảnh chụp minh chứng có đánh số: `prototype/screen1-K4.png`, `prototype/screen2-K4.png`, `prototype/screen1-K6.png`, `prototype/screen2-K6-reject.png` (hộp không duyệt), `prototype/screen1-K1.png`.
 - **10 kịch bản bấm được (K1–K10, khớp bảng §2):** chọn bằng hàng nút phía trên; K4 và K6 (hai ca đắt nhất) có dấu ⭐. Mỗi ca hiển thị lớp rủi ro và nhãn mức hại ở khung bên phải. Ảnh minh hoạ thêm: `prototype/screen1-K1.png`.
-- **Quy trình và các điều kiện chặn (validation) trong prototype:**
-  - Thanh tiến trình 4 bước luôn hiện ở đầu trang: ① Người mua báo → ② Bằng chứng → ③ Người bán phản hồi (48 giờ) → ④ Nhân viên quyết. Mỗi bước hiện trạng thái *đang chờ / xong / chưa áp dụng*, để cả hai bên biết hồ sơ đang ở đâu.
-  - Người mua **không gửi được** yêu cầu trả hàng/hoàn tiền khi chưa đính kèm ảnh bằng chứng (hiện cảnh báo đỏ). Nút “Gặp nhân viên” thì **không bị chặn** để người mua không bị kẹt với bot.
-  - Nhân viên **không bấm được** “Duyệt hoàn tiền” khi chưa đủ hai điều kiện: có bằng chứng của người mua (hoặc người bán đã xác nhận lỗi) **và** người bán đã phản hồi/xác nhận hoặc đã hết hạn 48 giờ. Nút mờ đi kèm danh sách ✓/✗ lý do. Nút “Giả lập: hết hạn 48 giờ” chỉ để demo.
-  - Ca AI đánh giá “chưa đủ căn cứ” (K5, K6): màn nhân viên nhắc lại đánh giá đó, để nhân viên kiểm lại trước khi quyết khác.
-  - Điều kiện chặn này làm đúng điều §4 đã nói: một bước người duyệt chỉ có ý nghĩa khi người đó thấy đủ hai phía.
+- **Quy trình đầy đủ và các điều kiện chặn (validation) trong prototype.** Thanh tiến trình 4 bước luôn hiện ở đầu trang, mỗi bước có trạng thái *đang chờ / xong / chưa áp dụng*:
+
+  | Bước | Ai làm | Điều kiện để qua bước | Bị chặn khi |
+  |---|---|---|---|
+  | ① Người mua báo vấn đề | Người mua → AI phân loại | Gửi tin | — |
+  | ② Bằng chứng | Người mua (AI chỉ *xin*, tool `yeu_cau_bang_chung` = tự làm) | Có ảnh | Bấm “Gửi yêu cầu trả hàng/hoàn tiền” khi chưa có ảnh → cảnh báo đỏ, không gửi |
+  | ③ Người bán phản hồi (48 giờ) | Người bán | Phản hồi, *hoặc* xác nhận lỗi, *hoặc* hết hạn 48 giờ | — (chỉ áp dụng khi người bán đã được báo) |
+  | ④ Nhân viên quyết | Nhân viên (không phải AI) | Đủ ② **và** ③ | Nút “Duyệt hoàn tiền” và “Không duyệt” cùng mờ, kèm danh sách ✓/✗ còn thiếu gì |
+
+  Tại bước ④ nhân viên có ba lựa chọn:
+  - **Duyệt hoàn tiền** → hộp xác nhận tóm tắt hai bên → tiền về người mua, hồ sơ đóng.
+  - **Không duyệt (từ chối khiếu nại)** → hộp xác nhận, **bắt buộc chọn lý do** (người mua sẽ thấy) → tiền về người bán, hồ sơ đóng. Đây là `tu_choi_khieu_nai`: cấm với AI, chỉ nhân viên làm.
+  - **Yêu cầu thêm bằng chứng** → bước ② quay về “đang chờ”, người mua được báo trong chat, hai nút quyết khoá lại cho tới khi người mua gửi thêm ảnh.
+
+  Lý do chặn **cả hai hướng** bằng cùng điều kiện: sai hướng nào cũng có một bên mất tiền và khó đảo (hoàn sai thì người bán mất, từ chối sai thì người mua mất), nên nhân viên chỉ được quyết khi đã nghe đủ hai bên.
+
+  Các nhánh đặc biệt:
+  - **Làn duyệt nhanh (K1):** người bán bấm “Xác nhận gửi nhầm” → chỉ còn nút “Duyệt nhanh hoàn tiền”, không có “Không duyệt” vì người bán đã nhận lỗi. Vẫn là nhân viên bấm.
+  - **Hoàn tác:** chuyển nhân viên do AI tự làm thì hoàn tác được, *cho tới khi* người mua gửi yêu cầu chính thức hoặc nhân viên đã quyết.
+  - **Sau khi nhân viên quyết:** hồ sơ khoá (không gửi thêm ảnh, không gửi yêu cầu, không hoàn tác). Người mua thấy kết quả và lý do; nút “Gặp nhân viên” vẫn mở để khiếu nại lại nếu có bằng chứng mới. Người bán thấy kết quả.
+  - **Không có quyết định hoàn tiền ở bước này:** K7 (nghi hàng giả → bộ phận chuyên trách), K8 (đòi SĐT → chat trong app), K10 (hỏi tiến độ → quyết định nằm ở hồ sơ gốc).
+  - **K9 quá hạn:** người bán không được báo; nhân viên xét ngoại lệ, quyết được khi có ảnh.
+  - **K2 tin cụt:** người bán chỉ được báo sau khi người mua chọn đúng đơn.
+  - Nút “Giả lập: hết hạn 48 giờ” chỉ để demo, không có trong sản phẩm thật.
 - **Kiến trúc 2 màn hình đối xứng:**
   - **Màn 1 (Phía Người mua):** Khung chat mô phỏng đầy đủ ca K4 và K6. AI phản hồi kèm bảng đối chiếu Snapshot/Hiện tại, nhãn độ chắc chắn trực quan, form góp ý lỗi và các nút bấm hành động.
   - **Màn 2 (Phía Người bán & Nhân viên):** Người bán theo dõi khiếu nại kèm đồng hồ đếm ngược hạn phản hồi 48h; Nhân viên tiếp nhận hồ sơ tóm tắt và giữ nút *Duyệt hoàn tiền* (phía AI tuyệt đối không có nút duyệt này).
