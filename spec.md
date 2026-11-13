@@ -131,8 +131,6 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 
 ## §4. Mức tự chủ
 
-*Quy trình bắt buộc (4.3): mỗi người tự xếp mức cho 5 tool trước khi xem của nhau. Điền vào bảng "ai chọn gì". Dưới đây là phương án nháp để làm điểm xuất phát.*
-
 | Tool | Mức | Ai duyệt / thấy gì / quá hạn | Lý do (cost-of-error) | Phương án loại |
 |---|---|---|---|---|
 | `yeu_cau_bang_chung` | **Tự làm** | Không cần duyệt. Ràng buộc: mẫu cố định, không kết luận, không lặp quá 1 lần/bên/đơn, chỉ gửi trên đơn đã xác nhận | Sai thì tin đã tới nhưng đính chính được, chỉ tốn vài phút. Bắt duyệt thì người mua chờ vô ích ("cứ bị hỏi lại" thành "chờ mãi") | Cần duyệt: chờ cũng là một kiểu sai, mà sai ở đây rẻ |
@@ -151,7 +149,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
   - *Bảo (B):* Đề xuất mức **Tự làm (Auto)**. Lập luận: Xuất phát từ góc độ trải nghiệm người mua (UX) và tối ưu tỷ lệ chuyển đổi; nếu ca nào cũng đợi người duyệt thì SLA xử lý kéo dài gây ức chế ("cứ bảo đợi nhân viên thì dùng AI làm gì").
 - **Nhóm chốt giải pháp kiến trúc dung hòa:** **Tách đôi tool `soan_hoan_tien` thành 2 giai đoạn độc lập:**
   1. `soan_de_xuat_hoan_tien`: **Tự làm** — AI tự động tổng hợp hồ sơ, so sánh snapshot, trích xuất dữ liệu mâu thuẫn để tạo sẵn phiếu đề xuất kèm chứng cứ (chưa phát sinh giao dịch tiền).
-  2. `thuc_hien_hoan_tien`: **Cần người duyệt** — Nhân viên sàn thẩm định và bấm duyệt. Đồng thời bổ sung **Làn duyệt nhanh (Fast-track 1-click)**: Nếu người bán đã bấm "Xác nhận gửi nhầm" trên Kênh Người Bán, nhân viên chỉ cần 1 cú click duyệt nhanh mà không cần thẩm định lại từ đầu. Giải pháp này vừa chặn đứng rủi ro K4/K6 (thỏa mãn yêu cầu an toàn của Hạ Anh), vừa rút ngắn tối đa thời gian chờ đợi cho K1 (thỏa mãn yêu cầu trải nghiệm của Bảo).
+  2. `thuc_hien_hoan_tien`: **Cần người duyệt** — Nhân viên sàn thẩm định và bấm duyệt. Đồng thời đề xuất thêm **Làn duyệt nhanh (Fast-track 1-click)** *(đề xuất thiết kế, chưa dựng trong prototype)*: nếu người bán đã xác nhận lỗi gửi nhầm trên kênh người bán, nhân viên chỉ cần 1 cú click duyệt mà không cần thẩm định lại từ đầu. Giải pháp này vừa chặn đứng rủi ro K4/K6 (thỏa mãn yêu cầu an toàn của Hạ Anh), vừa rút ngắn tối đa thời gian chờ đợi cho K1 (thỏa mãn yêu cầu trải nghiệm của Bảo).
 
 ### Thử mức đã đặt
 | Kịch bản | Cái sai có bị chặn? | Còn làm khi lẽ ra phải hỏi? | Người dùng bình thường chờ vô ích? |
@@ -184,7 +182,7 @@ Nhãn mức độ thiệt hại: **nhẹ** (người dùng tự thấy và tự 
 |---|---|---|---|
 | ① | Dòng trích dẫn nguồn: "Dựa trên mô tả lúc bạn đặt (12/10)..." | HAX G11 (Giải thích lý do) | Căn cứ dữ liệu bất biến (Data Grounding) |
 | ② | Nhãn trạng thái: "Cần nhân viên xem xét" / "Chưa đủ căn cứ" | HAX G2 (Làm rõ mức độ chắc chắn) | Hiển thị độ chắc chắn (Confidence Score) |
-| ③ | Nút hành động: *Gửi ảnh bằng chứng* / *Chỉ ra điểm khác* | HAX G9 (Hỗ trợ sửa lỗi hiệu quả) | **Tự làm** (`yeu_cau_bang_chung` — có hoàn tác) |
+| ③ | Nút hành động: *Gửi ảnh bằng chứng* / *Chỉ ra điểm khác* | HAX G9 (Hỗ trợ sửa lỗi hiệu quả) | **Tự làm** (`yeu_cau_bang_chung` — người dùng tự đính kèm; việc AI tự làm có hoàn tác được thể hiện ở ⑤) |
 | ④ | Câu thoại AI nêu rõ thẩm quyền, từ chối cam kết tiền về | HAX G10 (Nêu rõ giới hạn hệ thống) | Ràng buộc thẩm quyền (Scope Bound) |
 | ⑤ | Nút hành động: *Gặp nhân viên* (luôn hiện diện ở mọi trạng thái) | PAIR Errors & Graceful Failure | **Tự làm** (`chuyen_truong_nhom` — có nút Hoàn tác) |
 | ⑥ | Nút hành động tại Màn 2: *Duyệt hoàn tiền* (kèm modal cảnh báo) | PAIR User Control & Oversight | **Cần người duyệt** (`thuc_hien_hoan_tien`) |
@@ -243,12 +241,3 @@ Bảng kết quả chấm thử nghiệm trên 2 kịch bản thực tế:
   - **Chuẩn bị trả lời 2 câu hỏi sát hạch của TA:**
     1. *"Chỗ nào trên giao diện là nguyên tắc HAX G__?"* → Bảo trỏ trực tiếp vào 9 điểm neo chú thích ① đến ⑨ trên màn hình.
     2. *"Hành động này nếu AI làm sai thì ai mất gì, vì sao đặt ở mức đó?"* → Bảo trả lời theo bảng phân tích chi phí sai sót (cost-of-error) tại §4.
-
----
-
-## CHECKLIST NỘP
-- [x] Repo công khai, tên `K5-<lớp>-Day05-T4-<tên nhóm>`, mở được bằng cửa sổ ẩn danh
-- [x] `spec.md` có bảng thành viên, mã học viên đúng; đã xoá mục "KẾ HOẠCH CHIA VIỆC"
-- [x] `prototype/index.html` + ảnh đánh số (khớp bảng §5)
-- [x] Mọi chỗ **[NHÓM CHỐT]** đã được hai người đọc và sửa bằng lời mình
-- [x] Cả hai trả lời được: "Hành động này sai thì ai mất gì?" · "Lỗi nguy hiểm nhất là gì?" · "Phần bạn làm là gì?"

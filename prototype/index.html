@@ -201,7 +201,7 @@ function renderChat(){
   const buttons = {
     evidence: '<button data-act="evidence" '+(S.evidence?'disabled':'')+'><span class="mk">3</span>Gửi ảnh bằng chứng <span class="tag auto">tự làm</span></button>',
     point:    '<button data-act="point"><span class="mk">3</span>Chỉ ra điểm khác <span class="tag auto">tự làm</span></button>',
-    human:    '<button data-act="human" '+(S.escalated?'disabled':'')+'><span class="mk">5</span>Gặp nhân viên</button>',
+    human:    '<button data-act="human"><span class="mk">5</span>Gặp nhân viên</button>',
     request:  '<button data-act="request" class="primary" '+(S.requested?'disabled':'')+'>Gửi yêu cầu trả hàng/hoàn tiền <span class="tag approve">cần duyệt</span></button>'
   };
   const ai = addMsg("ai",
